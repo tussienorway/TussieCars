@@ -1,0 +1,20 @@
+{
+  "order": [
+    "harbor_loop",
+    "pier_chicane",
+    "lighthouse_run",
+    "breakwater",
+    "dune_straight",
+    "canyon_switch",
+    "mesa_cross",
+    "dust_bowl",
+    "foundry_mile",
+    "warehouse_bend",
+    "neon_overpass",
+    "rivet_yard",
+    "gull_rock",
+    "salt_pan",
+    "gearworks",
+    "storm_point"
+  ]
+}

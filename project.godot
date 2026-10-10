@@ -1,0 +1,47 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="TussieCars"
+config/description="Top-down arcade combat racing."
+config/version="3.0.0"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://assets/icon.png"
+
+[autoload]
+
+Settings="*res://src/autoload/settings.gd"
+Game="*res://src/autoload/game.gd"
+AudioDirector="*res://src/autoload/audio_director.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/resizable=true
+window/size/min_width=960
+window/size/min_height=540
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_s3tc_bptc=true
+textures/vram_compression/import_etc2_astc=true
+2d/snap/snap_2d_vertices_to_pixel=false
+
+[xr]
+
+openxr/enabled=false
+openxr/enabled.quest=true
+openxr/reference_space=0
+openxr/foveation_level=3
+openxr/foveation_dynamic=true
+openxr/startup_alert=false
+shaders/enabled=true

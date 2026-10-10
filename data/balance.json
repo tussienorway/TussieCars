@@ -1,0 +1,301 @@
+{
+ "starting_money": 2800,
+ "bailouts": 3,
+ "repair_per_hp": 6,
+ "advance_rank": 3,
+ "points": [
+  10,
+  7,
+  5,
+  3,
+  2,
+  1
+ ],
+ "physics": {
+  "accel": 540,
+  "brake": 820,
+  "reverse_accel": 320,
+  "max_speed": 470,
+  "reverse_max": 160,
+  "turn_rate": 3.05,
+  "high_speed_turn": 0.4,
+  "grip": 8.2,
+  "drag": 0.18,
+  "rolling": 18
+ },
+ "boost": {
+  "extra_accel": 360,
+  "speed_mul": 1.15,
+  "drain": 0.5,
+  "regen": 0.1,
+  "grip_mul": 0.86,
+  "min_start": 0.12
+ },
+ "slipstream": {
+  "drag_mul": 0.68,
+  "speed_mul": 1.06,
+  "fill": 0.16,
+  "min_gap": 40,
+  "max_gap": 148,
+  "lane": 24
+ },
+ "drift": {
+  "yaw_mul": 1.75,
+  "grip_mul": 0.55,
+  "fill": 0.32,
+  "min_speed": 150,
+  "slide": 0.42
+ },
+ "surfaces": {
+  "A": {
+   "grip": 1.0,
+   "drag": 0.12,
+   "damage": 0
+  },
+  "F": {
+   "grip": 1.0,
+   "drag": 0.12,
+   "damage": 0
+  },
+  "N": {
+   "grip": 0.96,
+   "drag": 0.16,
+   "damage": 0
+  },
+  "C": {
+   "grip": 0.82,
+   "drag": 0.28,
+   "damage": 0
+  },
+  "D": {
+   "grip": 0.62,
+   "drag": 0.85,
+   "damage": 0
+  },
+  "S": {
+   "grip": 0.48,
+   "drag": 1.15,
+   "damage": 0
+  },
+  "O": {
+   "grip": 0.2,
+   "drag": 0.18,
+   "damage": 0
+  },
+  "W": {
+   "grip": 0.32,
+   "drag": 1.8,
+   "damage": 8
+  },
+  "G": {
+   "grip": 0.42,
+   "drag": 2.3,
+   "damage": 0
+  },
+  "B": {
+   "grip": 0.2,
+   "drag": 2.0,
+   "damage": 0
+  }
+ },
+ "weapons": {
+  "missile": {
+   "speed": 760,
+   "damage": 22,
+   "cooldown": 0.42,
+   "life": 1.25
+  },
+  "rear": {
+   "speed": 680,
+   "damage": 18,
+   "cooldown": 0.48,
+   "life": 1.15
+  },
+  "mine": {
+   "damage": 34,
+   "arm": 0.4,
+   "life": 16,
+   "radius": 22
+  }
+ },
+ "collision_damage": 0.05,
+ "collision_threshold": 110,
+ "difficulties": {
+  "rookie": {
+   "label": "Rookie",
+   "ai_skill": 0.78,
+   "ai_weapon": 0.35,
+   "damage_taken": 0.72,
+   "prize": 1.15
+  },
+  "pro": {
+   "label": "Pro",
+   "ai_skill": 0.96,
+   "ai_weapon": 0.7,
+   "damage_taken": 1.0,
+   "prize": 1.0
+  },
+  "ace": {
+   "label": "Ace",
+   "ai_skill": 1.08,
+   "ai_weapon": 1.0,
+   "damage_taken": 1.22,
+   "prize": 1.28
+  }
+ },
+ "prizes": {
+  "club": {
+   "fee": 200,
+   "payouts": [
+    1400,
+    900,
+    550,
+    320,
+    180,
+    80
+   ]
+  },
+  "national": {
+   "fee": 650,
+   "payouts": [
+    3000,
+    1900,
+    1200,
+    700,
+    360,
+    140
+   ]
+  },
+  "turbo": {
+   "fee": 1200,
+   "payouts": [
+    5400,
+    3500,
+    2200,
+    1300,
+    640,
+    220
+   ]
+  },
+  "masters": {
+   "fee": 2000,
+   "payouts": [
+    8000,
+    5200,
+    3200,
+    1900,
+    900,
+    300
+   ]
+  }
+ },
+ "tiers": {
+  "club": {
+   "ai_speed": 0.9,
+   "label": "Club Cup"
+  },
+  "national": {
+   "ai_speed": 0.98,
+   "label": "National Series"
+  },
+  "turbo": {
+   "ai_speed": 1.05,
+   "label": "Turbo Championship"
+  },
+  "masters": {
+   "ai_speed": 1.1,
+   "label": "Masters Cup"
+  }
+ },
+ "ammo_price": {
+  "missile": 120,
+  "missile_pack": 6,
+  "mine": 110,
+  "mine_pack": 2,
+  "rear": 140,
+  "rear_pack": 4
+ },
+ "upgrades": {
+  "engine": {
+   "label": "Engine",
+   "max": 5,
+   "base_cost": 480,
+   "blurb": "Harder acceleration off the line and out of corners."
+  },
+  "gearbox": {
+   "label": "Top speed",
+   "max": 5,
+   "base_cost": 520,
+   "blurb": "Raises the flat-out speed on the straights."
+  },
+  "brakes": {
+   "label": "Brakes",
+   "max": 5,
+   "base_cost": 400,
+   "blurb": "Shorter stops so you can brake later."
+  },
+  "tires": {
+   "label": "Tires",
+   "max": 5,
+   "base_cost": 440,
+   "blurb": "More grip. Less slide on asphalt, still loose on oil."
+  },
+  "armor": {
+   "label": "Armor",
+   "max": 5,
+   "base_cost": 560,
+   "blurb": "Cuts collision and weapon damage taken."
+  },
+  "hull": {
+   "label": "Hull",
+   "max": 5,
+   "base_cost": 500,
+   "blurb": "More hit points before the car is destroyed."
+  },
+  "missiles": {
+   "label": "Front missiles",
+   "max": 5,
+   "base_cost": 600,
+   "blurb": "Heavier front warheads. Starts fitted."
+  },
+  "mines": {
+   "label": "Rear mines",
+   "max": 5,
+   "base_cost": 640,
+   "blurb": "Unlocks mines, then makes them nastier."
+  },
+  "rear": {
+   "label": "Rear missiles",
+   "max": 5,
+   "base_cost": 700,
+   "blurb": "Unlocks a backward-firing missile."
+  },
+  "ammo_rack": {
+   "label": "Ammo racks",
+   "max": 4,
+   "base_cost": 360,
+   "blurb": "Carry more missiles and mines."
+  },
+  "pit": {
+   "label": "Pit tools",
+   "max": 4,
+   "base_cost": 380,
+   "blurb": "Cheaper hull repairs between races."
+  }
+ },
+ "weather": {
+  "rain_grip": 0.8
+ },
+ "knockout": {
+  "interval": 20.0
+ },
+ "rival": {
+  "bounty": 0.4
+ },
+ "wall_damage": 0.1,
+ "wall_threshold": 85,
+ "wall_scrape": 7.0,
+ "ai_fire_rate": 0.45,
+ "weapon_damage_scale": 0.6,
+ "weapons_hold": 5.0
+}

@@ -1,0 +1,11 @@
+[configuration]
+
+entry_symbol = "plugin_library_init"
+compatibility_minimum = "4.6"
+android_aar_plugin = true
+
+[libraries]
+
+android.release.arm64 = "res://addons/godotopenxrvendors/.bin/android/template_release/arm64/libgodotopenxrvendors.so"
+windows.release.x86_64 = "res://addons/godotopenxrvendors/.bin/windows/template_release/x86_64/libgodotopenxrvendors.dll"
+linux.debug.x86_64 = "res://addons/godotopenxrvendors/.bin/linux/template_debug/x86_64/libgodotopenxrvendors.so"

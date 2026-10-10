@@ -1,0 +1,21 @@
+.godot/
+*.tmp
+export/
+build/
+.gradle/
+**/android/build/
+*.keystore
+!releases/**/*.keystore
+docs/shots/
+__pycache__/
+*.pyc
+.DS_Store
+
+/android/
+
+# Builds are published as GitHub Releases
+releases/**/*.exe
+releases/**/*.zip
+releases/**/*.apk
+releases/**/*.idsig
+releases/**/*.dll

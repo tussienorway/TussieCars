@@ -1,0 +1,13 @@
+[
+  {"id": "briggs", "name": "Otto Briggs", "style": "cautious", "skill": 0.74, "body": "mule", "paint": "olive", "tier": 1},
+  {"id": "kline", "name": "Bo Kline", "style": "balanced", "skill": 0.78, "body": "dart", "paint": "white", "tier": 1},
+  {"id": "peck", "name": "Jules Peck", "style": "aggressive", "skill": 0.82, "body": "fang", "paint": "orange", "tier": 1},
+  {"id": "hale", "name": "Noor Hale", "style": "balanced", "skill": 0.86, "body": "viper", "paint": "blue", "tier": 2},
+  {"id": "frost", "name": "Lina Frost", "style": "cautious", "skill": 0.88, "body": "dart", "paint": "cyan", "tier": 2},
+  {"id": "santos", "name": "Rhea Santos", "style": "aggressive", "skill": 0.91, "body": "viper", "paint": "red", "tier": 2},
+  {"id": "bell", "name": "Idris Bell", "style": "balanced", "skill": 0.93, "body": "mule", "paint": "yellow", "tier": 2},
+  {"id": "dorn", "name": "Pavel Dorn", "style": "cautious", "skill": 0.95, "body": "dart", "paint": "green", "tier": 3},
+  {"id": "quill", "name": "Mara Quill", "style": "balanced", "skill": 0.98, "body": "fang", "paint": "violet", "tier": 3},
+  {"id": "holt", "name": "Kenji Holt", "style": "aggressive", "skill": 1.0, "body": "viper", "paint": "blackred", "tier": 3},
+  {"id": "voss", "name": "Ada Voss", "style": "aggressive", "skill": 1.04, "body": "fang", "paint": "white", "tier": 3}
+]

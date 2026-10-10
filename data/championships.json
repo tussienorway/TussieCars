@@ -1,0 +1,50 @@
+[
+ {
+  "id": "club",
+  "name": "Club Cup",
+  "unlock": "",
+  "blurb": "Four coastal circuits. Learn the racing line before the weapons get serious.",
+  "tracks": [
+   "harbor_loop",
+   "pier_chicane",
+   "lighthouse_run",
+   "breakwater"
+  ]
+ },
+ {
+  "id": "national",
+  "name": "National Series",
+  "unlock": "club",
+  "blurb": "Desert speed. Sand runoff, a crossing, and drivers who do not lift.",
+  "tracks": [
+   "dune_straight",
+   "canyon_switch",
+   "mesa_cross",
+   "dust_bowl"
+  ]
+ },
+ {
+  "id": "turbo",
+  "name": "Turbo Championship",
+  "unlock": "national",
+  "blurb": "Night industrial rounds. Oil, gates, and the fastest field on the calendar.",
+  "tracks": [
+   "foundry_mile",
+   "warehouse_bend",
+   "neon_overpass",
+   "rivet_yard"
+  ]
+ },
+ {
+  "id": "masters",
+  "name": "Masters Cup",
+  "unlock": "turbo",
+  "blurb": "The finale. One cup across coast, desert, and factory \u2014 the fastest field and no room for error.",
+  "tracks": [
+   "gull_rock",
+   "salt_pan",
+   "gearworks",
+   "storm_point"
+  ]
+ }
+]
