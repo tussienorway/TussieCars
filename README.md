@@ -6,6 +6,8 @@ A career runs through four championships, sixteen circuits, and a garage. You ea
 
 ## Download
 
+**Bruksanvisning (Norwegian user manual): [BRUKSANVISNING.md](BRUKSANVISNING.md).** The game also has a How to Play page in the main menu.
+
 Ready-made builds are on the [Releases page](https://github.com/tussienorway/TussieCars/releases/latest):
 
 - `TussieCars-windows.zip`: Windows 64-bit. Unzip and run `TussieCars.exe`, or `TussieCars-VR.bat` for PC VR.
@@ -47,7 +49,7 @@ On a Windows PC those overrides are not needed. Gamepads use the left stick, the
 `releases/android/TussieCars.apk` is a signed ARM64 package.
 
 - Package: `com.tussiecars.arcade`
-- Version: 3.0.0 (code 21)
+- Version: 3.1.0 (code 22)
 - minSdk 24, targetSdk 36
 - Landscape (sensor), adaptive launcher icon
 - Permissions: internet (multiplayer), access-network-state (lobby discovery), vibrate (haptics)
@@ -137,7 +139,7 @@ The look is stylized arcade, not photorealism: pro-built low-poly cars and track
 - Asphalt has a world-space noise detail instead of a tile checker, grass is mowed in diagonal bands, and the grandstands are packed with a cheering crowd.
 - Weather: tick **Rain** in Exhibition (or catch a **Monsoon** Daily Duel) for falling rain, a grey sky, thicker fog, shiny wet asphalt, and 20% less grip. Every car throws up a mist of spray at speed and runs with its headlamps on, as it does at night.
 - Tussie the cat: the game's mascot, a red-and-white long-haired cat with a fluffy ruff, ear tufts, and a banded tail. It sits beside every start grid, turns its head to follow your car, swishes its tail, and gets excited at the finish. It also sits next to the logo on the main menu and in the credits.
-- Cinematic finish: crossing the line slides in letterbox bars and swings the camera around your car while your place and time are shown, then the results open.
+- Cinematic finish: crossing the line slides in letterbox bars and swings the camera around your car while your place and time are shown. Then the camera cuts to a podium: the top three cars on gold, silver, and bronze blocks with name boards, Tussie beside them, and confetti. Then the results open.
 
 ## Controls
 

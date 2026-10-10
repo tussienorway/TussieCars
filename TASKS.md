@@ -39,4 +39,5 @@ Not done, because the environment cannot do them:
 - [ ] Launch the exe on a real Windows machine without Wine
 - [ ] Play a multiplayer race with two real devices on a network
 - [x] VR: Meta Quest 3 OpenXR build, PC VR launcher, 3D menu lobby with laser pointers, chase and cockpit VR cameras, dashboard HUD, controller driving and haptics
+- [x] Podium ceremony after the finish, in-game How to Play, Norwegian user manual
 - [ ] VR: play on a real Quest 3 and tune comfort and frame rate

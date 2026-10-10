@@ -1,6 +1,6 @@
 # Test results
 
-Date: 10 October 2026. Godot 4.7.2.stable.official.ed1daf0bf. Game version 3.0.0.
+Date: 10 October 2026. Godot 4.7.2.stable.official.ed1daf0bf. Game version 3.1.0.
 
 ## Headless suite
 
@@ -10,7 +10,7 @@ Command:
 godot --headless --path /workspace -- --test
 ```
 
-Result: **289 passed, 0 failed.** Exit code 0. The same suite passes inside the exported Windows exe under Wine.
+Result: **297 passed, 0 failed.** Exit code 0. The same suite passes inside the exported Windows exe under Wine.
 
 The suite checks:
 
@@ -37,6 +37,8 @@ The suite checks:
 
 - VR: the panel ray test maps centre and corner pixels and rejects misses and rays that point away. The origin yaw faces the car heading for any angle. Stick deadzone, chase and cockpit eye placement are checked. A laser click presses a real Button through the panel viewport, and a click elsewhere does not. In `VR.sim`, touch controls stay off, a race builds the XR rig, skips split screen, puts the HUD and pause menu on the panel, skips the letterbox and vignette, keeps the rig processing while paused, follows behind the car, toggles lasers with pause, and swaps camera on Y. The lobby hosts the menus on its screen and shows Tussie and your car. The vendors plugin ships Android arm64, the `quest` feature enables OpenXR, and the Quest 3 preset is present.
 
+- Podium: after the orbit the stage is built in the tree with three blocks, Tussie, and the winner on block 1. The camera frames the stage from above the platform, the callout says YOU WIN!, results wait for the podium and then open, and the top three are ranked by place with wrecks skipped. The main menu has How to Play, and the guide covers keyboard, weapons and pickups, and the career.
+
 ## VR smoke
 
 `xvfb-run -a godot --path . --rendering-driver opengl3 --audio-driver Dummy -- --vr-sim --vr-smoke` captures `vr_lobby.png` (showroom, menu screen, laser, Tussie, car on a plinth), `vr_settings.png` (VR camera option), `vr_race.png` (chase rig with the dashboard HUD), `vr_cockpit.png` (roof cam), `vr_pause.png` (pause menu on the HUD with a laser), and `vr_back.png` (back in the lobby after quitting).
@@ -54,6 +56,8 @@ xvfb-run -a godot --path /workspace --rendering-driver opengl3 --audio-driver Du
 Exit code 0. Captures are in `docs/previews/`.
 
 - `menu.png` — main menu over the harbor backdrop.
+- `help.png` — How to Play guide.
+- `podium.png` — podium after the finish: three cars on gold, silver, and bronze, name boards, Tussie, and confetti.
 - `garage.png` — Sprint Dart, repairs, ammo, the four cars.
 - `race.png` — 3D chase view of the harbor starting grid, kerbs, palms, and the start gantry.
 - `race_mid.png` — 3D harbor asphalt, rumble kerbs, nitro bar, and car shadows.

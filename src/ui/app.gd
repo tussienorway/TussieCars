@@ -95,6 +95,7 @@ func show_main() -> void:
 		col.add_child(_button("Exhibition", show_exhibition))
 		col.add_child(_button("Daily Duel", show_daily))
 		col.add_child(_button("Multiplayer", show_multiplayer))
+		col.add_child(_button("How to Play", show_help))
 		col.add_child(_button("Settings", show_settings))
 		col.add_child(_button("Credits", show_credits))
 		col.add_child(_button("Quit", _quit))
@@ -682,6 +683,41 @@ func show_settings() -> void:
 	)
 
 
+const HELP := [
+	["Goal", "Finish ahead of the field. Most circuits are three laps; the lap counter in the HUD shows how many. Pass every checkpoint in order. Shortcuts do not count, and a red WRONG WAY means turn around."],
+	["Keyboard", "W or Up accelerates, S or Down brakes and reverses, A D or the arrows steer. Space drifts, Shift fires nitro, C launches a front missile, X drops a mine, V fires a rear missile, and Esc pauses. Rebind keys in Settings."],
+	["Gamepad", "Right trigger accelerates, left trigger brakes, and the left stick steers. Y is nitro, clicking the left stick drifts, RB fires missiles, LB drops mines, X fires rear missiles, and Start pauses."],
+	["Touch", "Phones show a steering pad on the left and pedals and weapon buttons on the right. Hold ACCEL, slide your thumb on the pad to steer, and use BRAKE, BOOST, DRIFT, FIRE, MINE, and REAR."],
+	["VR", "Right trigger is gas, left trigger is brake, and either stick steers. A is nitro, B is drift, right grip fires a missile, left grip drops a mine, and X fires a rear missile. Y switches between chase and roof camera, and Menu pauses. In menus, point and pull the trigger. Hold the Meta button to recenter."],
+	["Nitro, drift, and slipstream", "Drift through corners to fill the yellow nitro bar, or sit right behind another car to fill it from the slipstream. Boost pads on the road launch you forward, and cyan pickups top the tank up. Spend it on the straights."],
+	["Weapons and pickups", "Orange crates add missiles, red crates add mines, green crates repair the hull, and cyan crates add nitro. Missiles fly straight ahead, rear missiles cover your tail, and mines sit where you drop them."],
+	["Damage", "The guard rails are solid. Hitting them at speed costs hull, and scraping along them wears it down. At zero HP the car is wrecked and earns nothing. Oil slides, water and sand slow you down, and grass and walls stop you."],
+	["Career", "Start in the Sprint Dart with $2,800. Pay the entry fee, race for prize money and points, and finish a series in the top 3 to unlock the next one: Club Cup, National Series, Turbo Championship, and Masters Cup. Beat your named rival for a bounty. Spend winnings in the Garage on engine, top speed, brakes, tires, armor, hull, weapons, and new cars."],
+	["Other modes", "Exhibition races any of the 16 circuits with no fee, with optional rain, knockout, and two-player split screen. Daily Duel is one seeded race a day against your own ghost. Multiplayer hosts or joins a race on the same WiFi with one tap, for up to 4 drivers."],
+	["Tips", "Brake before the corner, not in it. Save a missile for the last straight. Repair in the Garage between races, because damage carries over. Tussie sits by every start grid and cheers you on."],
+]
+
+
+func show_help() -> void:
+	_fill(func(col):
+		col.add_child(_header("How to Play"))
+		var order: Array = HELP.duplicate()
+		var lead := "VR" if VR.active() else ("Touch" if Settings.touch_active() else "")
+		for i in order.size():
+			if str(order[i][0]) == lead:
+				var entry: Array = order[i]
+				order.remove_at(i)
+				order.insert(1, entry)
+				break
+		for entry in order:
+			var title := _label(str(entry[0]), 16)
+			title.add_theme_color_override("font_color", Color("ffb000"))
+			col.add_child(title)
+			col.add_child(_subtitle(str(entry[1])))
+		col.add_child(_button("Back", show_main))
+	)
+
+
 func show_credits() -> void:
 	_fill(func(col):
 		col.add_child(_header("Credits"))
@@ -797,6 +833,9 @@ func start_smoke() -> void:
 	show_exhibition()
 	await get_tree().create_timer(0.3).timeout
 	await _capture("exhibition")
+	show_help()
+	await get_tree().create_timer(0.3).timeout
+	await _capture("help")
 	_launch({
 		"track_id": smoke_track,
 		"mode": "exhibition",
@@ -875,6 +914,8 @@ func start_smoke() -> void:
 			winner.finish_time = race.sim.race_time
 		await get_tree().create_timer(1.6).timeout
 		await _capture("finish")
+		await get_tree().create_timer(3.4).timeout
+		await _capture("podium")
 	if race != null and is_instance_valid(race):
 		race.queue_free()
 		race = null

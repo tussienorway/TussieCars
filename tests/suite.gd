@@ -483,9 +483,32 @@ func _cinematic(view: RaceView) -> void:
 	var near := RaceView.orbit_point(Vector3.ZERO, 0.0, 3.0)
 	var far := RaceView.orbit_point(Vector3.ZERO, 0.0, 0.0)
 	_check("orbit closes in", Vector2(near.x, near.z).length() < Vector2(far.x, far.z).length() and near.y < far.y)
+	var next_rank := 2
+	for other in view.sim.cars:
+		if other != me:
+			(other as CarState).rank = next_rank
+			next_rank += 1
 	view.cine_t = RaceView.CINE_HOLD + 0.1
 	view._physics_process(0.1)
-	_check("results follow the orbit", view.reported)
+	_check("podium follows the orbit", view.podium != null and view.podium.is_inside_tree() and not view.reported and view.cine_holding())
+	_check("podium has three blocks and the cat", view.podium != null and view.podium.get_node_or_null("Block1") != null and view.podium.get_node_or_null("Block3") != null and view.podium.get_node_or_null("PodiumCat") != null)
+	_check("podium seats the winner on top", view.podium != null and view.podium.get_node_or_null("Car1") != null and str(view.podium.get_node("Car1").get_meta("car_id", "")) == me.id)
+	_check("podium camera looks at the stage", view.cam.global_position.distance_to(view.podium_origin()) < 400.0 and view.cam.global_position.y > view.podium_origin().y)
+	_check("podium callout names the winner", view.callout_label.text == "YOU WIN!", view.callout_label.text)
+	view.cine_t = view.cine_total() + 0.1
+	view._physics_process(0.1)
+	_check("results follow the podium", view.reported)
+	var a := CarState.new()
+	a.rank = 3
+	var b := CarState.new()
+	b.rank = 1
+	var c := CarState.new()
+	c.rank = 2
+	c.dnf = true
+	var d := CarState.new()
+	d.rank = 4
+	var top := Podium3D.top_three([a, b, c, d])
+	_check("podium ranks by place and skips wrecks", top.size() == 3 and top[0] == b and top[1] == a and top[2] == d)
 
 
 func _walls() -> void:
@@ -709,6 +732,11 @@ func _menus() -> void:
 	_check("settings menu", names.has("Back"), " ".join(names))
 	app.show_credits()
 	_check("credits", _button_texts(app).has("Back"))
+	app.show_main()
+	_check("main menu has how to play", _button_texts(app).has("How to Play"))
+	app.show_help()
+	var help_labels := _label_texts(app)
+	_check("how to play explains the game", help_labels.has("Keyboard") and help_labels.has("Weapons and pickups") and help_labels.has("Career") and _button_texts(app).has("Back"), " ".join(help_labels))
 	app.show_multiplayer()
 	var lobby_names := _button_texts(app)
 	_check("wifi lobby one-tap", lobby_names.has("QUICK HOST — one tap race") and lobby_names.has("Rescan"), " ".join(lobby_names))

@@ -67,8 +67,10 @@ var hit_flash := 0.0
 var _rival_quiet_until := 0
 var cine_t := -1.0
 const CINE_HOLD := 3.2
+const PODIUM_HOLD := 3.4
 const VR_HINT := "RT gas  LT brake  stick steer  A nitro  B drift  R grip missile  L grip mine  X rear  Y view  Menu pause"
 var letterbox: Array = []
+var podium: Node3D = null
 var vr := false
 var vr_origin: XROrigin3D = null
 var vr_cam: XRCamera3D = null
@@ -177,7 +179,15 @@ func _physics_process(delta: float) -> void:
 func cine_holding() -> bool:
 	if bool(config.get("instant_results", false)):
 		return false
-	return cine_t >= 0.0 and cine_t < CINE_HOLD
+	return cine_t >= 0.0 and cine_t < cine_total()
+
+
+func podium_enabled() -> bool:
+	return not vr and split_cams.is_empty() and net_role == "" and not bool(config.get("instant_results", false))
+
+
+func cine_total() -> float:
+	return CINE_HOLD + (PODIUM_HOLD if podium_enabled() else 0.0)
 
 
 func _process(delta: float) -> void:
@@ -1868,7 +1878,10 @@ func _update_camera(delta: float) -> void:
 			_drive_chase(split_cams[1] as Camera3D, p2, delta)
 	elif cine_t >= 0.0:
 		cine_t += delta
-		_drive_orbit(cam, p1, delta)
+		if podium_enabled() and cine_t >= CINE_HOLD:
+			_drive_podium()
+		else:
+			_drive_orbit(cam, p1, delta)
 	else:
 		_drive_chase(cam, p1, delta)
 	_update_letterbox(delta)
@@ -2139,3 +2152,34 @@ func _vr_drive(drive: Dictionary) -> Dictionary:
 	drive["drop_mine"] = bool(drive["drop_mine"]) or left.get_float(&"grip") > 0.6
 	drive["fire_rear"] = bool(drive["fire_rear"]) or left.is_button_pressed(&"ax_button")
 	return drive
+
+
+func podium_origin() -> Vector3:
+	if not sim.track.grid.is_empty():
+		var slot: Vector3 = sim.track.grid[0]
+		return Vector3(slot.x, Podium3D.STAGE_HEIGHT, slot.y)
+	var me := _me()
+	return flat(me.pos if me != null else Vector2.ZERO, Podium3D.STAGE_HEIGHT)
+
+
+func _drive_podium() -> void:
+	var origin := podium_origin()
+	if podium == null:
+		podium = Podium3D.build(sim.cars)
+		podium.position = origin
+		add_child(podium)
+		var winners := Podium3D.top_three(sim.cars)
+		if not winners.is_empty():
+			var champ := winners[0] as CarState
+			var you_won := champ.is_player
+			_callout("YOU WIN!" if you_won else "%s WINS" % champ.driver_name.to_upper(), Color("ffd23f"), int(PODIUM_HOLD * 1000.0) + 400)
+			if you_won:
+				AudioDirector.play_sfx("buy")
+	var t := cine_t - CINE_HOLD
+	var view := Podium3D.shot(origin, t)
+	var eye: Vector3 = view["eye"]
+	cam.transform = Transform3D(Basis.looking_at((view["look"] as Vector3) - eye, Vector3.UP), eye)
+	cam.fov = 50.0
+	var kitty := podium.get_node_or_null("PodiumCat") as Node3D
+	if kitty != null:
+		Cat3D.animate(kitty, cine_t, eye, true)
