@@ -51,7 +51,7 @@ Section "TussieCars" SecMain
   WriteRegStr HKCU "Software\\TussieCars" "InstallDir" "$INSTDIR"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TussieCars" "DisplayName" "TussieCars"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TussieCars" "UninstallString" "$INSTDIR\\Avinstaller.exe"
-  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TussieCars" "DisplayVersion" "1.0.0"
+  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TussieCars" "DisplayVersion" "1.1.0"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TussieCars" "Publisher" "TussieCars"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TussieCars" "DisplayIcon" "$INSTDIR\\TussieCars.exe"
   WriteRegDWORD HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TussieCars" "NoModify" 1
