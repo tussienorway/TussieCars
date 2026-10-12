@@ -18,15 +18,16 @@ static func integrate(car: CarState, input: Dictionary, delta: float, surf: Dict
 	var steer := float(input.get("steer", 0.0))
 	var reversing := bool(input.get("reverse", false))
 	var engine := car.accel * damage_mul
+	var drive := 0.0
 	if reversing:
-		fspeed -= Balance.num("physics.reverse_accel", 320.0) * delta
+		drive -= Balance.num("physics.reverse_accel", 320.0)
 	elif throttle > 0.0:
-		fspeed += engine * throttle * delta
+		drive += engine * throttle
 	if brake_in > 0.0 and not reversing:
 		if fspeed > 8.0:
-			fspeed -= car.brake * brake_in * delta
+			drive -= car.brake * brake_in
 		else:
-			fspeed -= engine * 0.45 * brake_in * delta
+			drive -= engine * 0.45 * brake_in
 	var want_boost := bool(input.get("boost", false)) and throttle > 0.2 and not reversing
 	var can_boost := car.boost > 0.02 and (car.boosting or car.boost >= Balance.num("boost.min_start", 0.12))
 	car.boosting = want_boost and can_boost
@@ -34,7 +35,7 @@ static func integrate(car: CarState, input: Dictionary, delta: float, surf: Dict
 	car.drafting = bool(input.get("draft", false)) and absf(fspeed) > 110.0 and not reversing
 	var max_s := car.max_speed * damage_mul
 	if car.boosting:
-		fspeed += Balance.num("boost.extra_accel", 360.0) * delta
+		drive += Balance.num("boost.extra_accel", 360.0)
 		max_s *= Balance.num("boost.speed_mul", 1.15)
 		car.boost = maxf(0.0, car.boost - Balance.num("boost.drain", 0.5) * delta)
 	else:
@@ -45,11 +46,29 @@ static func integrate(car: CarState, input: Dictionary, delta: float, surf: Dict
 			car.boost = minf(1.0, car.boost + Balance.num("slipstream.fill", 0.16) * delta)
 	if car.drafting:
 		max_s *= Balance.num("slipstream.speed_mul", 1.06)
-	fspeed = clampf(fspeed, -Balance.num("physics.reverse_max", 160.0), max_s)
+	var grip_mul := 1.0
+	if car.drifting:
+		grip_mul *= Balance.num("drift.grip_mul", 0.55)
+	var lat_grip := 1.0
+	if car.boosting:
+		lat_grip *= Balance.num("boost.grip_mul", 0.86)
+	# Friction circle: longitudinal and lateral force share one grip budget.
+	# The budget shrinks with speed, so a flat-out corner asks for more yaw
+	# than the tyres can give. Braking while turning spends the same budget.
+	var mu := _surface_mu(car, surf, grip_mul, Vector2(fspeed, lspeed).length(), max_s)
+	var a_peak := Balance.num("physics.lat_accel", 640.0) * mu
+	var steer_abs := clampf(absf(steer), 0.0, 1.0)
+	var long_share := sqrt(maxf(0.0, 1.0 - steer_abs * steer_abs * 0.72))
+	var long_cap := a_peak * maxf(long_share, 0.28)
+	drive = clampf(drive, -long_cap, long_cap)
+	var transfer := clampf(drive / maxf(a_peak, 1.0), -1.0, 1.0)
+	car.load = transfer
+	fspeed += drive * delta
 	if str(surf.get("id", "")) == "N" and not reversing:
 		fspeed += Balance.num("pad.push", 150.0) * delta
 		car.boost = minf(1.0, car.boost + Balance.num("pad.fill", 1.6) * delta)
-	if throttle <= 0.0 and brake_in <= 0.0:
+	fspeed = clampf(fspeed, -Balance.num("physics.reverse_max", 160.0), max_s)
+	if throttle <= 0.0 and brake_in <= 0.0 and not reversing:
 		var roll := Balance.num("physics.rolling", 18.0) * delta
 		if absf(fspeed) <= roll:
 			fspeed = 0.0
@@ -59,22 +78,44 @@ static func integrate(car: CarState, input: Dictionary, delta: float, surf: Dict
 	if car.drafting:
 		drag *= Balance.num("slipstream.drag_mul", 0.68)
 	fspeed *= exp(-drag * delta)
-	var grip_mul := 1.0
-	if car.boosting:
-		grip_mul *= Balance.num("boost.grip_mul", 0.86)
+	var xfer := Balance.num("physics.load_transfer", 0.55)
+	var lat_scale := 1.0
+	var yaw_scale := 1.0
+	if transfer < 0.0:
+		lat_scale = lerpf(1.0, 1.0 - xfer * 0.5, -transfer)
+		yaw_scale = lerpf(1.0, 1.0 + xfer * 0.45, -transfer)
+	elif transfer > 0.0:
+		yaw_scale = lerpf(1.0, 1.0 - xfer * 0.55, transfer)
+		lat_scale = lerpf(1.0, 1.0 - xfer * 0.18, transfer)
+	var lat_budget := a_peak * lat_scale * lat_grip
+	var lat_left := sqrt(maxf(0.0, lat_budget * lat_budget - drive * drive))
+	var kill := minf(absf(lspeed), lat_left * delta)
+	lspeed -= signf(lspeed) * kill
 	if car.drifting:
-		grip_mul *= Balance.num("drift.grip_mul", 0.55)
 		lspeed += steer * absf(fspeed) * Balance.num("drift.slide", 0.42) * delta
-	var grip := maxf(0.05, car.grip * float(surf.get("grip", 1.0)) * grip_mul)
-	lspeed *= exp(-grip * delta)
 	fspeed -= absf(lspeed) * 0.45 * delta
 	var speed_ratio := clampf(absf(fspeed) / maxf(max_s, 1.0), 0.0, 1.0)
-	var high := Balance.num("physics.high_speed_turn", 0.4)
-	var turn := steer * car.turn_rate * lerpf(1.0, high, speed_ratio)
+	var high := Balance.num("physics.high_speed_turn", 0.32)
+	var turn := steer * car.turn_rate * lerpf(1.0, high, speed_ratio) * yaw_scale
 	if car.drifting:
 		turn *= Balance.num("drift.yaw_mul", 1.75)
 	if absf(fspeed) < 34.0:
 		turn *= absf(fspeed) / 34.0
+	var demand := absf(fspeed) * absf(turn)
+	var slip := 0.0
+	if demand > lat_left and absf(fspeed) > 36.0:
+		var allowed := lat_left / absf(fspeed)
+		var excess := maxf(0.0, absf(turn) - allowed)
+		var keep := 0.28 if car.drifting else 0.06
+		turn = signf(turn) * (allowed + excess * keep)
+		slip = clampf((demand / maxf(lat_left, 1.0)) - 1.0, 0.0, 1.0)
+		lspeed += steer * absf(fspeed) * slip * Balance.num("physics.slip_push", 0.9) * delta
+	else:
+		slip = clampf(demand / maxf(lat_left, 1.0), 0.0, 1.0) * 0.4
+	var leftover := absf(lspeed) / maxf(absf(fspeed) + absf(lspeed), 1.0)
+	if car.drifting:
+		slip = maxf(slip, 0.7)
+	car.slip = maxf(slip, clampf(leftover * 1.35, 0.0, 1.0))
 	var turn_sign := -1.0 if fspeed < -8.0 else 1.0
 	car.heading = wrapf(car.heading + turn * delta * turn_sign, -PI, PI)
 	forward = Vector2.from_angle(car.heading)
@@ -86,6 +127,19 @@ static func integrate(car: CarState, input: Dictionary, delta: float, surf: Dict
 	car.cd_missile = maxf(0.0, car.cd_missile - delta)
 	car.cd_rear = maxf(0.0, car.cd_rear - delta)
 	car.cd_mine = maxf(0.0, car.cd_mine - delta)
+
+
+# Grip coefficient. car.grip stays the garage stat (about 8.2 stock) and is
+# scaled back to a friction multiplier. Speed cuts the circle so a corner
+# taken flat exceeds the tyres; lifting or braking brings the grip back.
+static func _surface_mu(car: CarState, surf: Dictionary, grip_mul: float, speed: float, max_s: float) -> float:
+	var ref := maxf(Balance.num("physics.grip", 8.2), 0.01)
+	var stat := car.grip / ref
+	var surf_g := float(surf.get("grip", 1.0))
+	var ratio := clampf(speed / maxf(max_s, 1.0), 0.0, 1.15)
+	var floor_g := Balance.num("physics.speed_grip", 0.34)
+	var speed_g := lerpf(1.0, floor_g, pow(minf(ratio, 1.0), 1.1))
+	return maxf(0.04, stat * surf_g * grip_mul * speed_g)
 
 
 static func move(car: CarState, delta: float, track: TrackData, damage_scale: float) -> float:

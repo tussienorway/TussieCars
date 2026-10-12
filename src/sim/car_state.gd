@@ -56,6 +56,10 @@ var boost := 1.0
 var boosting := false
 var drafting := false
 var drifting := false
+# 0 = tyres hooked up, 1 = the friction circle is used up and the car is sliding.
+var slip := 0.0
+# Signed weight transfer: positive on power, negative under braking.
+var load := 0.0
 
 
 func apply_spec(spec: Dictionary) -> void:

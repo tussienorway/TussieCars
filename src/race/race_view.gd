@@ -35,6 +35,8 @@ var callout_label: Label
 var _callout_until := 0
 var net_label: Label
 var vignette: TextureRect
+var speed_lines: ColorRect
+var chase_slip := 0.0
 var net_role := ""
 var net_index := 0
 var net: NetManager
@@ -346,11 +348,15 @@ func _build_world() -> void:
 	sky_mat.sky_horizon_color = cols["sky_hor"]
 	sky_mat.ground_bottom_color = cols["ground"]
 	sky_mat.ground_horizon_color = cols["sky_hor"]
-	sky_mat.sun_angle_max = 12.0
+	sky_mat.sun_angle_max = 26.0
+	sky_mat.sun_curve = 0.06
+	sky_mat.sky_curve = 0.16
+	sky_mat.ground_curve = 0.12
+	sky_mat.energy_multiplier = 0.62 if night else 1.22
 	sky.sky_material = sky_mat
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.35 if night else 0.55
+	env.ambient_light_energy = 0.32 if night else 0.62
 	env.fog_enabled = true
 	env.fog_light_color = cols["fog"]
 	env.fog_density = 0.0006 if rain else 0.00028
@@ -371,6 +377,15 @@ func _build_world() -> void:
 	env.ssao_radius = 2.0
 	env.ssao_intensity = 2.0
 	env.ssao_light_affect = 0.5
+	# Forward+ (the Windows build) can spend a bit more on contact shadows and SSAO.
+	# The web and mobile exports stay on the Compatibility renderer and skip this.
+	var rich := RenderingServer.get_current_rendering_method() == "forward_plus"
+	if rich:
+		env.ssao_radius = 1.35
+		env.ssao_intensity = 2.5
+		env.ssao_horizon = 0.12
+		env.glow_bloom = 0.22
+		env.glow_intensity = 0.62 if night else 0.5
 	if quest_lean():
 		env.ssao_enabled = false
 		env.glow_enabled = false
@@ -384,13 +399,26 @@ func _build_world() -> void:
 	# 800 was far too wide for the web tile-shadow renderer: it stretched shadow
 	# texels thin and soft. The chase camera only sees a few hundred units ahead,
 	# so a tighter range gives sharper, cheaper contact shadows under the cars.
-	sun.directional_shadow_max_distance = 220.0
-	sun.shadow_blur = 1.0
+	sun.directional_shadow_max_distance = 280.0 if RenderingServer.get_current_rendering_method() == "forward_plus" else 220.0
+	sun.shadow_blur = 0.6 if RenderingServer.get_current_rendering_method() == "forward_plus" else 1.0
 	add_child(sun)
+	var fill := DirectionalLight3D.new()
+	fill.name = "FillLight"
+	fill.light_color = cols["sky_hor"]
+	fill.light_energy = 0.1 if night else 0.32
+	fill.shadow_enabled = false
+	fill.rotation = Vector3(-0.35, 2.4, 0.0)
+	add_child(fill)
 	var ground := MeshInstance3D.new()
 	ground.mesh = TrackBuilder3D.build_ground(sim.track)
 	ground.material_override = TrackBuilder3D.ground_material(rain)
 	add_child(ground)
+	var asphalt := MeshInstance3D.new()
+	asphalt.name = "Asphalt"
+	asphalt.mesh = TrackBuilder3D.build_asphalt(sim.track)
+	asphalt.material_override = TrackBuilder3D.asphalt_material(rain)
+	asphalt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(asphalt)
 	var walls := MeshInstance3D.new()
 	walls.mesh = TrackBuilder3D.build_walls(sim.track)
 	walls.material_override = TrackBuilder3D.ground_material()
@@ -791,7 +819,7 @@ func _build_pickups() -> void:
 func _build_skids() -> void:
 	var mesh := PlaneMesh.new()
 	mesh.size = Vector2(9, 3.4)
-	for _i in 120:
+	for _i in 200:
 		var node := MeshInstance3D.new()
 		node.mesh = mesh
 		var m := StandardMaterial3D.new()
@@ -878,8 +906,8 @@ func _stamp_skid(at: Vector2, heading: float) -> void:
 func _maybe_skid(car: CarState, lateral: float) -> void:
 	if skid_pool.is_empty() or sim.state != "racing" or car.dnf:
 		return
-	var sliding := lateral > 72.0 and car.vel.length() > 90.0
-	var nitro_slide := car.boosting and lateral > 24.0 and car.vel.length() > 140.0
+	var sliding := car.slip > 0.48 or car.drifting or (lateral > 58.0 and car.vel.length() > 100.0)
+	var nitro_slide := car.boosting and lateral > 20.0 and car.vel.length() > 140.0
 	if not sliding and not nitro_slide:
 		return
 	var last: Vector2 = _last_skid.get(car.id, Vector2(-99999, -99999))
@@ -1101,10 +1129,11 @@ func _make_headlight() -> SpotLight3D:
 
 
 func _chase_params(boosting: bool, speed_frac: float = 0.0) -> Dictionary:
-	var fov := 62.0 + clampf(speed_frac, 0.0, 1.0) * 6.0 + (6.0 if boosting else 0.0)
-	if boosting:
-		return {"dist": 185.0, "height": 105.0, "fov": fov}
-	return {"dist": 165.0, "height": 100.0, "fov": fov}
+	var pace := clampf(speed_frac, 0.0, 1.15)
+	var fov := 56.0 + pace * 16.0 + (11.0 if boosting else 0.0)
+	var dist := lerpf(152.0, 196.0, clampf(pace, 0.0, 1.0)) + (14.0 if boosting else 0.0)
+	var height := lerpf(92.0, 118.0, clampf(pace, 0.0, 1.0)) + (6.0 if boosting else 0.0)
+	return {"dist": dist, "height": height, "fov": fov}
 
 
 func _place_chase(camera: Camera3D, target: Vector3, forward: Vector3, params: Dictionary, delta: float, snap: bool) -> void:
@@ -1116,8 +1145,11 @@ func _place_chase(camera: Camera3D, target: Vector3, forward: Vector3, params: D
 		from = from.lerp(want, 1.0 - exp(-5.0 * delta))
 	camera.set_meta("chase_pos", from)
 	var kick := Vector3.ZERO
-	if shake > 0.01 and Settings.shake_enabled():
-		kick = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * shake * 9.0
+	if Settings.shake_enabled():
+		if shake > 0.01:
+			kick = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * shake * 9.0
+		if chase_slip > 0.4:
+			kick += Vector3(randf_range(-1.0, 1.0), randf_range(-0.25, 0.25), randf_range(-1.0, 1.0)) * (chase_slip - 0.4) * 3.4
 	camera.position = from + kick
 	camera.look_at(target + forward * 70.0 + kick * 0.5)
 	cam_fov = lerpf(cam_fov, float(params["fov"]), 1.0 - exp(-3.0 * delta))
@@ -1483,7 +1515,11 @@ func _sync_visuals(delta: float) -> void:
 			var flick := 0.72 + 0.28 * sin(sim.race_time * 42.0 + car.pos.x * 0.05)
 			flame.scale = Vector3(flick, 0.85 + flick * 0.2, 0.85 + flick * 0.2)
 		var smoke: CPUParticles3D = visual["smoke"]
-		smoke.emitting = (car.drifting or (car.hp < car.max_hp * 0.35 and not car.dnf)) and sim.state == "racing"
+		var cell := str(sim.track.cell(car.pos))
+		var loose := cell == "S" or cell == "D" or cell == "G" or cell == "O"
+		var smoking: bool = sim.state == "racing" and not car.dnf and (car.drifting or car.slip > 0.46 or car.hp < car.max_hp * 0.35 or (loose and speed > 80.0))
+		smoke.emitting = smoking
+		smoke.amount = 28 if car.slip > 0.46 or car.drifting else 14
 		smoke.color = _dust_color(car.pos)
 		var spray := visual.get("spray") as CPUParticles3D
 		if spray != null:
@@ -1770,9 +1806,14 @@ func _update_hud() -> void:
 		else:
 			trick_label.visible = false
 	if vignette != null:
-		var pace := clampf((player.vel.length() - 180.0) / 320.0, 0.0, 1.0)
+		var pace := clampf((player.vel.length() - 140.0) / 300.0, 0.0, 1.0)
 		hit_flash = move_toward(hit_flash, 0.0, 0.035)
-		vignette.modulate = Color(1.0, 1.0 - hit_flash * 0.8, 1.0 - hit_flash * 0.8, minf(1.0, 0.18 + pace * 0.55 + hit_flash * 0.6))
+		vignette.modulate = Color(1.0, 1.0 - hit_flash * 0.8, 1.0 - hit_flash * 0.8, minf(1.0, 0.16 + pace * 0.7 + hit_flash * 0.6))
+	if speed_lines != null:
+		var streak := clampf((player.vel.length() - 150.0) / 280.0, 0.0, 1.0)
+		if player.boosting:
+			streak = clampf(streak + 0.28, 0.0, 1.0)
+		(speed_lines.material as ShaderMaterial).set_shader_parameter("amount", streak)
 	if sim.state == "countdown":
 		var n := int(ceil(sim.countdown))
 		countdown_label.text = "GO" if n <= 0 else str(n)
@@ -1967,7 +2008,8 @@ func _drive_chase(camera: Camera3D, car: CarState, delta: float) -> void:
 	if camera == null:
 		return
 	var forward := Vector3(cos(car.heading), 0, sin(car.heading))
-	_place_chase(camera, flat(car.pos, 10.0), forward, _chase_params(car.boosting, car.vel.length() / 900.0), delta, false)
+	chase_slip = car.slip
+	_place_chase(camera, flat(car.pos, 10.0), forward, _chase_params(car.boosting, car.vel.length() / 460.0), delta, false)
 
 
 func _build_grade(hud: CanvasLayer) -> void:
@@ -1984,6 +2026,17 @@ func _build_grade(hud: CanvasLayer) -> void:
 	vignette.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	vignette.modulate = Color(1, 1, 1, 0.2)
 	layer.add_child(vignette)
+	speed_lines = ColorRect.new()
+	speed_lines.set_anchors_preset(Control.PRESET_FULL_RECT)
+	speed_lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	speed_lines.color = Color(1, 1, 1, 1)
+	var streak_shader := Shader.new()
+	streak_shader.code = "shader_type canvas_item;\nuniform float amount = 0.0;\nvoid fragment() {\n\tvec2 p = UV - vec2(0.5);\n\tfloat r = length(p);\n\tfloat ang = atan(p.y, p.x);\n\tfloat bands = abs(sin(ang * 22.0 + TIME * (1.5 + amount * 6.0)));\n\tfloat streak = smoothstep(0.18, 0.72, r) * smoothstep(0.55, 0.95, bands);\n\tCOLOR = vec4(0.9, 0.94, 1.0, streak * amount * amount * 0.42);\n}\n"
+	var streak_mat := ShaderMaterial.new()
+	streak_mat.shader = streak_shader
+	streak_mat.set_shader_parameter("amount", 0.0)
+	speed_lines.material = streak_mat
+	layer.add_child(speed_lines)
 
 func _make_minimap() -> void:
 	var w := sim.track.width

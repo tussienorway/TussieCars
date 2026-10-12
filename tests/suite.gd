@@ -87,6 +87,24 @@ func _handling() -> void:
 	CarSim.integrate(asphalt, {"throttle": 0.0, "brake": 0.0, "steer": 0.0}, 0.25, {"grip": 1.0, "drag": 0.1, "damage": 0.0})
 	CarSim.integrate(oil, {"throttle": 0.0, "brake": 0.0, "steer": 0.0}, 0.25, {"grip": 0.2, "drag": 0.18, "damage": 0.0})
 	_check("oil slides more than asphalt", absf(oil.vel.y) > absf(asphalt.vel.y) + 20.0, "%s vs %s" % [oil.vel.y, asphalt.vel.y])
+	var road := {"grip": 1.0, "drag": 0.12, "damage": 0.0, "id": "A"}
+	var mild := _car(Vector2(640, 500), 0.0)
+	var hot := _car(Vector2(640, 500), 0.0)
+	mild.vel = Vector2(150, 0)
+	hot.vel = Vector2(450, 0)
+	CarSim.integrate(mild, {"throttle": 1.0, "brake": 0.0, "steer": 1.0}, 0.3, road)
+	CarSim.integrate(hot, {"throttle": 1.0, "brake": 0.0, "steer": 1.0}, 0.3, road)
+	_check("full speed turns less", absf(hot.heading) < absf(mild.heading) * 0.72, "hot %s mild %s" % [hot.heading, mild.heading])
+	_check("full speed breaks traction", hot.slip > 0.35, "slip %s lat %s" % [hot.slip, hot.vel.y])
+	var stopper := _car(Vector2(640, 500), 0.0)
+	stopper.vel = Vector2(420, 0)
+	var travelled := 0.0
+	for _i in 50:
+		travelled += maxf(stopper.vel.x, 0.0) * 0.05
+		CarSim.integrate(stopper, {"throttle": 0.0, "brake": 1.0, "steer": 0.0}, 0.05, road)
+		if stopper.vel.x < 30.0:
+			break
+	_check("braking takes a real distance", travelled > 90.0 and stopper.vel.x < 200.0, "dist %s speed %s" % [travelled, stopper.vel.x])
 	var wall := _car(Vector2(80, 70), -PI * 0.5)
 	wall.vel = Vector2(0, -520)
 	wall.hp = 100.0
@@ -425,6 +443,8 @@ func _props() -> void:
 	_check("asphalt has detail", gmat.albedo_texture != null and gmat.uv1_triplanar)
 	_check("wet asphalt shines", TrackBuilder3D.ground_material(true).roughness < gmat.roughness * 0.5)
 	var harbor := TrackData.get_track("harbor_loop")
+	var asphalt_mesh := TrackBuilder3D.build_asphalt(harbor)
+	_check("road wears an asphalt texture", asphalt_mesh.get_surface_count() > 0 and TrackBuilder3D.asphalt_material().albedo_texture != null)
 	var g_cols: PackedColorArray = TrackBuilder3D.build_ground(harbor).surface_get_arrays(0)[Mesh.ARRAY_COLOR]
 	var road_tones := {}
 	for ty in harbor.height:
