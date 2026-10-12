@@ -58,6 +58,8 @@ func local_ips() -> Array:
 
 
 func host_lobby(host_name: String, paint: String, wanted_track: String, wanted_port: int) -> String:
+	if OS.has_feature("web"):
+		return "Multiplayer needs the Windows, Android, or Quest app. This browser build is single-player."
 	leave()
 	self_name = NetDefs.clean_player_name(host_name)
 	self_paint = NetDefs.clean_paint(paint)
@@ -79,6 +81,8 @@ func host_lobby(host_name: String, paint: String, wanted_track: String, wanted_p
 
 
 func join_lobby(ip: String, wanted_port: int, join_name: String, paint: String) -> String:
+	if OS.has_feature("web"):
+		return "Multiplayer needs the Windows, Android, or Quest app. This browser build is single-player."
 	leave()
 	var clean_ip := ip.strip_edges()
 	if clean_ip == "":
@@ -141,6 +145,8 @@ func my_index() -> int:
 
 
 func start_listening() -> void:
+	if OS.has_feature("web"):
+		return
 	if _listening:
 		return
 	_udp = PacketPeerUDP.new()

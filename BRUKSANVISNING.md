@@ -8,12 +8,12 @@ Spillet finnes for Windows, Android-mobil og Meta Quest (VR). Menyene i spillet 
 
 ## 1. Last ned og installer
 
-Alle ferdige versjoner ligger på [release-siden](https://github.com/tussienorway/TussieCars/releases/latest).
+Du kan [spille i nettleseren](https://tussienorway.github.io/TussieCars/) uten å installere noe. Flerspiller og Quest-appen finnes i de nedlastbare versjonene på [release-siden](https://github.com/tussienorway/TussieCars/releases/latest).
 
 ### Windows
-1. Last ned `TussieCars-windows.zip`.
-2. Pakk ut zip-filen, for eksempel til skrivebordet.
-3. Dobbeltklikk `TussieCars.exe`. Hvis Windows viser «Windows beskyttet PCen din», trykker du **Mer info** og deretter **Kjør likevel**. Advarselen kommer fordi spillet ikke er signert av en kjent utgiver.
+1. Last ned `TussieCars-Windows-Setup.exe`.
+2. Dobbeltklikk filen. Hvis Windows viser «Windows beskyttet PCen din», trykker du **Mer info** og deretter **Kjør likevel**. Advarselen kommer fordi spillet ikke er signert av en kjent utgiver.
+3. Installasjonen legger en snarvei på skrivebordet og i Start-menyen. **TussieCars VR** starter PC VR (Quest Link, Air Link eller SteamVR). Uten hodesett starter spillet som vanlig.
 
 ### Android-mobil
 1. Last ned `TussieCars.apk` på telefonen.

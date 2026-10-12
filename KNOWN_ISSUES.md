@@ -1,5 +1,15 @@
 # Known issues
 
+## Browser build
+
+The web export is single-player. Browsers cannot open the UDP ports the lobby uses, so Multiplayer explains that and returns you to the menu. The page is published without cross-origin isolation headers, so the export has thread support off (GitHub Pages cannot send the headers a threaded build needs).
+
+Play in VR on the web is a button on the main menu. It asks the browser for a WebXR session and leaves the flat game running if there is no headset or the browser refuses. OpenXR (Quest standalone and PC VR) is unchanged. WebXR was not run on a real headset here.
+
+## Windows installer is unsigned
+
+`TussieCars-Windows-Setup.exe` is an NSIS per-user installer. It is not Authenticode-signed, so SmartScreen shows "Windows protected your PC" until you choose More info → Run anyway.
+
 ## Android was not played
 
 `releases/android/TussieCars.apk` is a signed arm64 package (1.3.0, code 4). This machine has the SDK and KVM, and no emulator image and no device. The APK was not installed. Touch controls, the on-screen pad, haptics, safe-area margins, keep-screen-on, and Android save paths are implemented and untested on hardware. The manifest was verified with `aapt`: INTERNET, ACCESS_NETWORK_STATE, and VIBRATE permissions, sensor-landscape orientation, and an adaptive icon.
