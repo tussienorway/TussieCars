@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TussieCars</title>
+  <meta name="description" content="TussieCars er et arkade-kampbilløp. Spill i nettleseren eller last ned Windows-installasjonen.">
+  <link rel="icon" href="icon.png">
+  <style>
+    @font-face {
+      font-family: "Silkscreen";
+      src: url("fonts/Silkscreen-Regular.ttf") format("truetype");
+      font-display: swap;
+    }
+    :root {
+      color-scheme: dark;
+      --bg: #12151c;
+      --ink: #f4efe4;
+      --muted: #b7c0ce;
+      --amber: #ffb000;
+      --teal: #2ec4b6;
+      --line: #f0a020;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Silkscreen", ui-monospace, monospace;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 50% -10%, #3a2a18 0%, transparent 55%),
+        linear-gradient(#1a1e28, var(--bg) 40%);
+    }
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 48px 20px 72px;
+    }
+    header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    header img {
+      width: 72px;
+      height: 72px;
+      image-rendering: pixelated;
+    }
+    h1 {
+      font-size: 28px;
+      letter-spacing: 0.04em;
+      margin: 0;
+      color: var(--amber);
+    }
+    .tag {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 28px 0 18px;
+    }
+    a.button {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--ink);
+      background: #262d3e;
+      border: 2px solid var(--line);
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    a.button:hover, a.button:focus-visible {
+      background: #343c52;
+      border-color: #ffd060;
+      outline: none;
+    }
+    a.button.primary { border-color: var(--teal); }
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      max-width: 62ch;
+    }
+    section {
+      margin-top: 36px;
+      border: 2px solid #2a3142;
+      background: rgba(18, 21, 28, 0.72);
+      padding: 18px 18px 8px;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: var(--amber);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 10px 8px 0;
+      border-bottom: 1px solid #2a3142;
+      vertical-align: top;
+    }
+    th { color: var(--teal); font-weight: normal; }
+    ul { margin: 0 0 14px; padding-left: 18px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    footer { margin-top: 28px; color: #8b93a3; font-size: 11px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icon.png" alt="">
+      <div>
+        <h1>TussieCars</h1>
+        <p class="tag">Arkade-kampbilløp i 3D. Seksten baner, nitro, missiler og katten Tussie ved startlinjen.</p>
+      </div>
+    </header>
+    <div class="actions">
+      <a class="button primary" href="play/index.html">Spill i nettleseren</a>
+      <a class="button" href="https://github.com/tussienorway/TussieCars/releases/download/v1.0.0/TussieCars-Windows-Setup.exe">Last ned for Windows (.exe)</a>
+    </div>
+    <p class="note">Nettleseren er enkeltspiller. Windows-filen er en installasjon for brukeren din, med snarvei på skrivebordet. Windows kan vise «Windows beskyttet PCen din» fordi filen ikke er signert. Velg Mer info og deretter Kjør likevel.</p>
+
+    <section>
+      <h2>Kontroller</h2>
+      <table>
+        <thead>
+          <tr><th>Handling</th><th>Tastatur</th><th>Håndkontroll</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Gass</td><td>W eller pil opp</td><td>Høyre avtrekker</td></tr>
+          <tr><td>Brems</td><td>S eller pil ned</td><td>Venstre avtrekker</td></tr>
+          <tr><td>Styr</td><td>A / D eller piltaster</td><td>Venstre stikke</td></tr>
+          <tr><td>Drift</td><td>Mellomrom</td><td>Trykk inn venstre stikke</td></tr>
+          <tr><td>Nitro</td><td>Shift</td><td>Y</td></tr>
+          <tr><td>Missil forover</td><td>C</td><td>RB</td></tr>
+          <tr><td>Mine</td><td>X</td><td>LB</td></tr>
+          <tr><td>Missil bakover</td><td>V</td><td>X</td></tr>
+          <tr><td>Pause</td><td>Esc</td><td>Start</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li>Klikk i spillbildet hvis tastene ikke svarer med en gang.</li>
+        <li>Drift i svingene fyller nitrotanken. Bruk den på langsiden.</li>
+        <li>Autovernet tar HP. Reparer i garasjen mellom løpene.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>VR</h2>
+      <ul>
+        <li>Vanlig spilling i nettleseren trenger ikke hodesett.</li>
+        <li>Har nettleseren WebXR, finnes knappen Play in VR i hovedmenyen. Uten hodesett fortsetter spillet på skjermen.</li>
+        <li>PC VR: installer Windows-versjonen, start Quest Link eller SteamVR, og åpne TussieCars VR fra Start-menyen.</li>
+      </ul>
+    </section>
+    <footer>
+      Godot 4. Tastatur og håndkontroll. Flerspiller finnes i Windows-, Android- og Quest-versjonen.
+    </footer>
+  </main>
+</body>
+</html>
