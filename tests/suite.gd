@@ -375,6 +375,8 @@ func _props() -> void:
 		_check("prop %s loads" % model, CarFactory3D.prop_scene(model) != null, model)
 	_check("desktop renders forward", str(ProjectSettings.get_setting("rendering/renderer/rendering_method")) == "forward_plus")
 	_check("mobile stays compatible", str(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile")) == "gl_compatibility")
+	_check("web stays compatible", str(ProjectSettings.get_setting("rendering/renderer/rendering_method.web")) == "gl_compatibility")
+	_check("browser vr stays optional", not VR.webxr_available())
 	var cam_probe := RaceView.new()
 	_check("camera widens with speed", float(cam_probe._chase_params(false, 1.0)["fov"]) > float(cam_probe._chase_params(false, 0.0)["fov"]))
 	_check("camera widens on boost", float(cam_probe._chase_params(true, 0.5)["fov"]) > float(cam_probe._chase_params(false, 0.5)["fov"]))

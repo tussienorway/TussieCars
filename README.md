@@ -6,11 +6,16 @@ A career runs through four championships, sixteen circuits, and a garage. You ea
 
 ## Download
 
+**Play in the browser:** [https://tussienorway.github.io/TussieCars/](https://tussienorway.github.io/TussieCars/)
+
+The site files are on the `gh-pages` branch. If the address 404s, enable Pages under the repo settings: Deploy from a branch, `gh-pages`, folder `/ (root)`. Merging to `main` also runs `.github/workflows/pages.yml`, which publishes with GitHub Actions once Pages is set to that source.
+
 **Bruksanvisning (Norwegian user manual): [BRUKSANVISNING.md](BRUKSANVISNING.md).** The game also has a How to Play page in the main menu.
 
 Ready-made builds are on the [Releases page](https://github.com/tussienorway/TussieCars/releases/latest):
 
-- `TussieCars-windows.zip`: Windows 64-bit. Unzip and run `TussieCars.exe`, or `TussieCars-VR.bat` for PC VR.
+- `TussieCars-Windows-Setup.exe`: Windows 64-bit installer (v1.0.0). It installs for the current user and adds a Start-menu shortcut. Windows SmartScreen warns because the file is unsigned: choose **More info**, then **Run anyway**. PC VR is `TussieCars VR` in the Start menu, or `TussieCars-VR.bat` in the install folder.
+- `TussieCars-windows.zip`: older Windows 64-bit zip. Unzip and run `TussieCars.exe`, or `TussieCars-VR.bat` for PC VR.
 - `TussieCars.apk`: Android phones (ARM64).
 - `TussieCars-Quest.apk`: Meta Quest 2/3/3S/Pro. Sideload it as described under VR below.
 

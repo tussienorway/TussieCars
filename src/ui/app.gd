@@ -19,6 +19,7 @@ var net_ip := ""
 var net_port := 7777
 var net_status := ""
 var _net_refreshing := false
+var vr_message := ""
 
 
 func bind_host(node: Node) -> void:
@@ -95,12 +96,29 @@ func show_main() -> void:
 		col.add_child(_button("Exhibition", show_exhibition))
 		col.add_child(_button("Daily Duel", show_daily))
 		col.add_child(_button("Multiplayer", show_multiplayer))
+		if VR.webxr_available():
+			col.add_child(_button("Play in VR", _enter_webxr))
 		col.add_child(_button("How to Play", show_help))
 		col.add_child(_button("Settings", show_settings))
 		col.add_child(_button("Credits", show_credits))
 		col.add_child(_button("Quit", _quit))
+		if vr_message != "":
+			col.add_child(_subtitle(vr_message))
 		col.add_child(_subtitle("Godot 4  ·  v%s" % str(ProjectSettings.get_setting("application/config/version"))))
 	)
+
+
+func vr_notice(message: String) -> void:
+	vr_message = message
+	if _screen == "main" and race == null:
+		show_main()
+
+
+func _enter_webxr() -> void:
+	vr_message = "Starting VR. Allow the headset prompt, or keep playing on screen."
+	show_main()
+	if host != null and host.has_method("enter_webxr"):
+		host.enter_webxr()
 
 
 func show_new_career() -> void:
@@ -335,6 +353,13 @@ func show_multiplayer() -> void:
 	_screen = "multiplayer"
 	if net == null:
 		show_main()
+		return
+	if OS.has_feature("web"):
+		_fill(func(col):
+			col.add_child(_header("Multiplayer"))
+			col.add_child(_subtitle("The browser build is single-player. Multiplayer needs the Windows, Android, or Quest app, because browsers cannot open the game's UDP ports."))
+			col.add_child(_button("Back", show_main))
+		)
 		return
 	if net.role == "idle":
 		net.start_listening()
@@ -637,15 +662,16 @@ func show_settings() -> void:
 		col.add_child(_slider("Master", "master"))
 		col.add_child(_slider("Music", "music"))
 		col.add_child(_slider("Effects", "sfx"))
-		var full := CheckBox.new()
-		full.text = "Fullscreen"
-		full.button_pressed = bool(Settings.data.get("fullscreen", false))
-		full.toggled.connect(func(on):
-			Settings.data["fullscreen"] = on
-			Settings.apply_window()
-			Settings.save_settings()
-		)
-		col.add_child(full)
+		if not OS.has_feature("web"):
+			var full := CheckBox.new()
+			full.text = "Fullscreen"
+			full.button_pressed = bool(Settings.data.get("fullscreen", false))
+			full.toggled.connect(func(on):
+				Settings.data["fullscreen"] = on
+				Settings.apply_window()
+				Settings.save_settings()
+			)
+			col.add_child(full)
 		var shake := CheckBox.new()
 		shake.text = "Screen shake"
 		shake.button_pressed = bool(Settings.data.get("shake", true))

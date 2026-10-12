@@ -4,10 +4,13 @@ var music: AudioStreamPlayer
 var engine: AudioStreamPlayer
 var _pool: Array = []
 var current := ""
+var _pending_music := ""
+var _unlocked := false
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_unlocked = not OS.has_feature("web")
 	music = AudioStreamPlayer.new()
 	music.bus = "Music"
 	music.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -23,7 +26,26 @@ func _ready() -> void:
 		_pool.append(player)
 
 
+func _input(event: InputEvent) -> void:
+	if _unlocked:
+		return
+	var pressed := false
+	if event is InputEventMouseButton or event is InputEventScreenTouch or event is InputEventKey or event is InputEventJoypadButton:
+		pressed = event.pressed
+	if not pressed:
+		return
+	_unlocked = true
+	if _pending_music != "":
+		var queued := _pending_music
+		_pending_music = ""
+		current = ""
+		play_music(queued)
+
+
 func play_music(track_name: String) -> void:
+	if not _unlocked:
+		_pending_music = track_name
+		return
 	if current == track_name and music.playing:
 		return
 	current = track_name
@@ -40,6 +62,8 @@ func stop_music() -> void:
 
 
 func play_sfx(sfx_name: String, pitch: float = 1.0, volume: float = 1.0) -> void:
+	if not _unlocked:
+		return
 	var stream := _stream("res://assets/audio/%s.wav" % sfx_name, false)
 	if stream == null:
 		return
@@ -55,6 +79,8 @@ func play_sfx(sfx_name: String, pitch: float = 1.0, volume: float = 1.0) -> void
 
 
 func set_engine(speed_ratio: float, throttle: float, active: bool) -> void:
+	if not _unlocked:
+		return
 	if not active:
 		if engine.playing:
 			engine.stop()

@@ -359,12 +359,13 @@ func _build_world() -> void:
 	env.glow_intensity = 0.45
 	env.glow_strength = 1.1
 	env.glow_bloom = 0.12
-	# SSAO only exists on Forward+; Compatibility renderers ignore it.
+	# SSAO only exists on Forward+. The web build is Compatibility / WebGL.
 	env.ssao_enabled = true
 	env.ssao_light_affect = 0.5
-	if quest_lean():
-		env.glow_enabled = false
+	if quest_lean() or OS.has_feature("web") or RenderingServer.get_current_rendering_method() == "gl_compatibility":
 		env.ssao_enabled = false
+	if quest_lean() or OS.has_feature("web"):
+		env.glow_enabled = false
 	world_env.environment = env
 	add_child(world_env)
 	sun = DirectionalLight3D.new()
