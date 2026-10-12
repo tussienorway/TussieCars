@@ -16,6 +16,7 @@ func _run() -> void:
 	_check("four vehicles", Balance.vehicles.size() >= 4)
 	_check("four championships", Balance.championships.size() >= 4)
 	_check("eleven drivers", Balance.drivers.size() >= 8)
+	Settings.data["graphics"] = "medium"
 	_content()
 	_handling()
 	_boost()
@@ -36,6 +37,7 @@ func _run() -> void:
 	_masters()
 	_net()
 	_graphics3d()
+	_graphics_presets()
 	_assets()
 	_vr()
 	print("TESTS %d passed, %d failed" % [passes, failures.size()])
@@ -432,6 +434,12 @@ func _props() -> void:
 		if c is WorldEnvironment:
 			env_node = c
 	_check("glow grade on", env_node != null and env_node.environment != null and env_node.environment.glow_enabled)
+	_check("day sky is a panorama", env_node != null and env_node.environment.sky != null and env_node.environment.sky.sky_material is PanoramaSkyMaterial)
+	_check("grade lut is on", env_node != null and env_node.environment.adjustment_enabled and env_node.environment.adjustment_color_correction != null)
+	var foliage := view.find_children("Foliage_*", "Node3D", true, false)
+	_check("foliage rings the circuit", foliage.size() >= 6, str(foliage.size()))
+	var marks := view.find_children("SurfaceMark_*", "Node3D", true, false)
+	_check("road wears surface marks", marks.size() >= 1, str(marks.size()))
 	_check("crowd fills both stands", view.crowds.size() == 2 and (view.crowds[0]["mm"] as MultiMesh).instance_count >= 50)
 	var before: Vector3 = (view.crowds[0]["mm"] as MultiMesh).get_instance_transform(3).origin
 	view.sim.race_time = 0.7
@@ -445,6 +453,12 @@ func _props() -> void:
 	var harbor := TrackData.get_track("harbor_loop")
 	var asphalt_mesh := TrackBuilder3D.build_asphalt(harbor)
 	_check("road wears an asphalt texture", asphalt_mesh.get_surface_count() > 0 and TrackBuilder3D.asphalt_material().albedo_texture != null)
+	var road_mat := TrackBuilder3D.asphalt_material()
+	_check("asphalt has a normal map", road_mat.normal_enabled and road_mat.normal_texture != null)
+	var grass_mesh := TrackBuilder3D.build_cover(harbor, "G")
+	_check("grass cover exists", grass_mesh.get_surface_count() > 0)
+	var grass_mat := TrackBuilder3D.grass_material("coastal")
+	_check("grass has a texture", grass_mat.albedo_texture != null and grass_mat.normal_enabled)
 	var g_cols: PackedColorArray = TrackBuilder3D.build_ground(harbor).surface_get_arrays(0)[Mesh.ARRAY_COLOR]
 	var road_tones := {}
 	for ty in harbor.height:
@@ -468,6 +482,7 @@ func _props() -> void:
 		if c is WorldEnvironment:
 			night_env = c
 	_check("night grade darker", night_env != null and night_env.environment != null and night_env.environment.ambient_light_energy < 0.5)
+	_check("night sky stays procedural", night_env != null and night_env.environment.sky != null and night_env.environment.sky.sky_material is ProceduralSkyMaterial)
 	night_view.queue_free()
 	var wet_view := RaceView.new()
 	add_child(wet_view)
@@ -891,6 +906,37 @@ func _graphics3d() -> void:
 	_check("pads glow on boost tiles", pads.get_surface_count() > 0, "harbor pads")
 	_check("pad cells found", TrackBuilder3D.pad_cells(track).size() > 0)
 	_check("3d view maps sim to ground", RaceView.flat(car.pos).x == car.pos.x and RaceView.flat(car.pos).z == car.pos.y)
+
+
+func _graphics_presets() -> void:
+	var web := GraphicsQuality.profile_for("ultra", "gl_compatibility")
+	_check("web ultra keeps glow", bool(web["glow"]))
+	_check("web ultra keeps ssao", bool(web["ssao"]))
+	_check("web ultra keeps agx", str(web["tonemap"]) == "agx")
+	_check("web ultra skips ssr", not bool(web["ssr"]))
+	_check("web ultra skips sdfgi", not bool(web["sdfgi"]))
+	_check("web ultra skips volumetric fog", not bool(web["volumetric_fog"]))
+	_check("web ultra skips taa", not bool(web["taa"]))
+	_check("web ultra skips fsr2", not bool(web["fsr2"]))
+	_check("motion blur is not in this engine", not bool(web["motion_blur"]))
+	_check("web ultra skips decal nodes", not bool(web["decal_nodes"]))
+	_check("web ultra uses msaa 4x", int(web["msaa"]) == int(Viewport.MSAA_4X))
+	var win := GraphicsQuality.profile_for("ultra", "forward_plus")
+	_check("windows ultra has ssr", bool(win["ssr"]))
+	_check("windows ultra has sdfgi", bool(win["sdfgi"]))
+	_check("windows ultra has volumetric fog", bool(win["volumetric_fog"]))
+	_check("windows ultra uses fsr2", bool(win["fsr2"]))
+	_check("windows ultra has no motion blur pass", not bool(win["motion_blur"]))
+	_check("windows ultra uses decal nodes", bool(win["decal_nodes"]))
+	_check("windows ultra drops msaa under fsr2", int(win["msaa"]) == int(Viewport.MSAA_DISABLED))
+	var low := GraphicsQuality.profile_for("low", "forward_plus")
+	_check("low drops glow and shadows", not bool(low["glow"]) and not bool(low["shadows"]))
+	_check("low uses fsr1", bool(low["fsr1"]) and is_equal_approx(float(low["scale"]), 0.75))
+	var high := GraphicsQuality.profile_for("high", "forward_plus")
+	_check("high windows uses taa", bool(high["taa"]) and not bool(high["fsr2"]) and bool(high["ssr"]))
+	if not OS.has_feature("web") and not OS.has_feature("mobile"):
+		_check("desktop forward+ defaults to high", GraphicsQuality.default_for("forward_plus") == "high")
+		_check("desktop compatibility defaults to medium", GraphicsQuality.default_for("gl_compatibility") == "medium")
 
 
 func _masters() -> void:

@@ -14,7 +14,7 @@ The site files are on the `gh-pages` branch. If the address 404s, enable Pages u
 
 Ready-made builds are on the [Releases page](https://github.com/tussienorway/TussieCars/releases/latest):
 
-- `TussieCars-Windows-Setup.exe`: Windows 64-bit installer (v1.1.0). It installs for the current user and adds a Start-menu shortcut. Windows SmartScreen warns because the file is unsigned: choose **More info**, then **Run anyway**. PC VR is `TussieCars VR` in the Start menu, or `TussieCars-VR.bat` in the install folder.
+- `TussieCars-Windows-Setup.exe`: Windows 64-bit installer (v1.2.0). It installs for the current user and adds a Start-menu shortcut. Windows SmartScreen warns because the file is unsigned: choose **More info**, then **Run anyway**. PC VR is `TussieCars VR` in the Start menu, or `TussieCars-VR.bat` in the install folder.
 - `TussieCars-windows.zip`: older Windows 64-bit zip. Unzip and run `TussieCars.exe`, or `TussieCars-VR.bat` for PC VR.
 - `TussieCars.apk`: Android phones (ARM64).
 - `TussieCars-Quest.apk`: Meta Quest 2/3/3S/Pro. Sideload it as described under VR below.
@@ -136,12 +136,14 @@ In Exhibition, tick **Knockout** before picking a track. There are no laps: ever
 
 ## Graphics
 
-The look is stylized arcade, not photorealism: pro-built low-poly cars and trackside props by Kenney (CC0, credited in `assets/kenney/CREDITS.md`), bloom lighting, fog, dynamic shadows, and night floodlighting on industrial circuits.
+The look is stylized arcade with a modern grade: Kenney cars and trees (CC0), ambientCG asphalt and grass, a Poly Haven HDRI sky, AgX tonemapping, bloom, and a color LUT. Credits are in `CREDITS.md`. The research notes are in `docs/GRAPHICS_RESEARCH.md`.
 
-- Desktop renders with Forward+ (ambient occlusion included) and falls back to Compatibility automatically on older video cards; Android always uses Compatibility for speed and battery.
+- Settings has a graphics preset: Auto, Low, Medium, High, or Ultra. Auto is Medium in the browser and High on Windows.
+- Windows (Forward+) can add screen-space reflections, volumetric fog, SDFGI, temporal antialiasing, and FSR 2.2 on the higher presets. The browser build uses the Compatibility renderer and keeps the effects that renderer can draw (HDRI sky, PBR textures, clearcoat, glow, SSAO, the LUT, MSAA, reflection probes). Effects it cannot run are skipped, not swapped for a broken shader.
+- Desktop falls back to Compatibility automatically on older video cards. Android always uses Compatibility.
 - Every start line has a grandstand, billboards, checkered flags, tire stacks, and cones. Industrial tracks get modern lamp posts with glowing heads.
 - The chase camera widens its field of view with speed and nitro, and shakes on hits.
-- Asphalt has a world-space noise detail instead of a tile checker, grass is mowed in diagonal bands, and the grandstands are packed with a cheering crowd.
+- The road is a CC0 asphalt material (color, roughness, normal). Grass outside the kerbs uses a CC0 grass material. The grandstands are packed with a cheering crowd. Kenney trees sit off the racing line.
 - Weather: tick **Rain** in Exhibition (or catch a **Monsoon** Daily Duel) for falling rain, a grey sky, thicker fog, shiny wet asphalt, and 20% less grip. Every car throws up a mist of spray at speed and runs with its headlamps on, as it does at night.
 - Tussie the cat: the game's mascot, a red-and-white long-haired cat with a fluffy ruff, ear tufts, and a banded tail. It sits beside every start grid, turns its head to follow your car, swishes its tail, and gets excited at the finish. It also sits next to the logo on the main menu and in the credits.
 - Cinematic finish: crossing the line slides in letterbox bars and swings the camera around your car while your place and time are shown. Then the camera cuts to a podium: the top three cars on gold, silver, and bronze blocks with name boards, Tussie beside them, and confetti. Then the results open.

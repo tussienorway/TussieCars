@@ -342,70 +342,39 @@ func _build_world() -> void:
 	var world_env := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
-	var sky := Sky.new()
-	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = cols["sky_top"]
-	sky_mat.sky_horizon_color = cols["sky_hor"]
-	sky_mat.ground_bottom_color = cols["ground"]
-	sky_mat.ground_horizon_color = cols["sky_hor"]
-	sky_mat.sun_angle_max = 26.0
-	sky_mat.sun_curve = 0.06
-	sky_mat.sky_curve = 0.16
-	sky_mat.ground_curve = 0.12
-	sky_mat.energy_multiplier = 0.62 if night else 1.22
-	sky.sky_material = sky_mat
-	env.sky = sky
+	_apply_sky(env, cols)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.32 if night else 0.62
+	env.ambient_light_energy = 0.32 if night else 0.58
 	env.fog_enabled = true
 	env.fog_light_color = cols["fog"]
-	env.fog_density = 0.0006 if rain else 0.00028
-	# AgX tonemapping (Godot 4.3+) reads more "modern filmic" than the old FILMIC
-	# curve and keeps hues under the bright arcade sun. A small exposure lift
-	# compensates for AgX being slightly darker than FILMIC.
-	env.tonemap_mode = Environment.TONE_MAPPER_AGX
-	env.tonemap_exposure = 1.0 if night else 1.1
-	env.glow_enabled = true
-	env.glow_intensity = 0.55 if night else 0.45
-	env.glow_bloom = 0.15
-	env.glow_hdr_threshold = 0.9
-	# Glow has worked on the Compatibility (WebGL2) renderer since Godot 4.3 and a
-	# simplified SSAO since 4.6, so both run fine on the flat web/desktop build.
-	# Only VR (Quest) drops them: standalone frame time is tight and Compatibility
-	# SSAO has a known instability in headsets.
-	env.ssao_enabled = true
-	env.ssao_radius = 2.0
-	env.ssao_intensity = 2.0
-	env.ssao_light_affect = 0.5
-	# Forward+ (the Windows build) can spend a bit more on contact shadows and SSAO.
-	# The web and mobile exports stay on the Compatibility renderer and skip this.
-	var rich := RenderingServer.get_current_rendering_method() == "forward_plus"
-	if rich:
-		env.ssao_radius = 1.35
-		env.ssao_intensity = 2.5
-		env.ssao_horizon = 0.12
-		env.glow_bloom = 0.22
-		env.glow_intensity = 0.62 if night else 0.5
-	if quest_lean():
-		env.ssao_enabled = false
-		env.glow_enabled = false
+	env.fog_density = 0.00055 if rain else 0.00022
+	env.fog_aerial_perspective = 0.35
+	# Presets and the Compatibility fallback live in GraphicsQuality. Quest still
+	# drops the expensive passes after the profile is built.
+	var gfx := GraphicsQuality.apply_environment(env, night, rain, quest_lean())
+	if bool(gfx.get("sdfgi", false)):
+		env.ambient_light_energy = 0.22 if night else 0.36
 	world_env.environment = env
 	add_child(world_env)
 	sun = DirectionalLight3D.new()
 	sun.light_color = cols["sun"]
-	sun.light_energy = 0.4 if night else (0.7 if rain else 1.15)
+	sun.light_energy = 0.45 if night else (0.72 if rain else 1.2)
 	sun.rotation = Vector3(-0.95, -0.55, 0)
-	sun.shadow_enabled = not quest_lean()
-	# 800 was far too wide for the web tile-shadow renderer: it stretched shadow
-	# texels thin and soft. The chase camera only sees a few hundred units ahead,
-	# so a tighter range gives sharper, cheaper contact shadows under the cars.
-	sun.directional_shadow_max_distance = 280.0 if RenderingServer.get_current_rendering_method() == "forward_plus" else 220.0
-	sun.shadow_blur = 0.6 if RenderingServer.get_current_rendering_method() == "forward_plus" else 1.0
+	sun.shadow_enabled = bool(gfx.get("shadows", true)) and not quest_lean()
+	# A wide shadow range stretches texels thin on the Compatibility shadow path.
+	# The chase camera only sees a few hundred units ahead.
+	sun.directional_shadow_max_distance = float(gfx.get("shadow_distance", 220.0))
+	sun.shadow_blur = float(gfx.get("shadow_blur", 1.0))
+	if bool(gfx.get("soft_sun", false)):
+		sun.light_angular_distance = 0.45
+		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+		sun.directional_shadow_blend_splits = true
+	sun.light_volumetric_fog_energy = 1.15 if bool(gfx.get("volumetric_fog", false)) else 0.0
 	add_child(sun)
 	var fill := DirectionalLight3D.new()
 	fill.name = "FillLight"
 	fill.light_color = cols["sky_hor"]
-	fill.light_energy = 0.1 if night else 0.32
+	fill.light_energy = 0.08 if night else 0.28
 	fill.shadow_enabled = false
 	fill.rotation = Vector3(-0.35, 2.4, 0.0)
 	add_child(fill)
@@ -413,6 +382,12 @@ func _build_world() -> void:
 	ground.mesh = TrackBuilder3D.build_ground(sim.track)
 	ground.material_override = TrackBuilder3D.ground_material(rain)
 	add_child(ground)
+	var grass := MeshInstance3D.new()
+	grass.name = "Grass"
+	grass.mesh = TrackBuilder3D.build_cover(sim.track, "G")
+	grass.material_override = TrackBuilder3D.grass_material(sim.track.environment)
+	grass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(grass)
 	var asphalt := MeshInstance3D.new()
 	asphalt.name = "Asphalt"
 	asphalt.mesh = TrackBuilder3D.build_asphalt(sim.track)
@@ -445,8 +420,8 @@ func _build_world() -> void:
 	add_child(skirt)
 	# One track-wide reflection probe (captured once) so the glossy clearcoat car
 	# paint reflects the sky, walls, and ground around it instead of a flat tint.
-	# ReflectionProbe renders on Compatibility/WebGL2; VR skips it for frame time.
-	if not quest_lean():
+	# ReflectionProbe renders on Compatibility/WebGL2; Low and Quest skip it.
+	if bool(gfx.get("reflections", false)) and not quest_lean():
 		var probe := ReflectionProbe.new()
 		probe.size = Vector3(maxf(size.x, 400.0) + 200.0, 260.0, maxf(size.y, 400.0) + 200.0)
 		probe.position = Vector3(size.x * 0.5, 90.0, size.y * 0.5)
@@ -457,6 +432,8 @@ func _build_world() -> void:
 	_build_start_line()
 	_build_start_complex()
 	_build_decor()
+	_build_foliage(int(gfx.get("foliage", 16)))
+	_build_surface_marks(bool(gfx.get("decal_nodes", false)) and not quest_lean())
 	_build_pickups()
 	_build_skids()
 	_build_flashes()
@@ -465,6 +442,170 @@ func _build_world() -> void:
 	_build_flags()
 	if rain:
 		_build_rain()
+
+
+func _apply_sky(env: Environment, cols: Dictionary) -> void:
+	# Day and rain use a CC0 Poly Haven panorama. Night stays a procedural sky:
+	# a daylight plate on an industrial circuit reads as the wrong time of day.
+	var hdri := ""
+	if not night and not rain:
+		hdri = "res://assets/textures/sky_day.hdr"
+	elif rain and not night:
+		hdri = "res://assets/textures/sky_overcast.hdr"
+	if hdri != "" and ResourceLoader.exists(hdri):
+		var sky := Sky.new()
+		var panorama := PanoramaSkyMaterial.new()
+		panorama.panorama = load(hdri)
+		panorama.energy_multiplier = 0.72 if rain else 0.95
+		sky.sky_material = panorama
+		env.sky = sky
+		return
+	var sky := Sky.new()
+	var sky_mat := ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = cols["sky_top"]
+	sky_mat.sky_horizon_color = cols["sky_hor"]
+	sky_mat.ground_bottom_color = cols["ground"]
+	sky_mat.ground_horizon_color = cols["sky_hor"]
+	sky_mat.sun_angle_max = 26.0
+	sky_mat.sun_curve = 0.06
+	sky_mat.sky_curve = 0.16
+	sky_mat.ground_curve = 0.12
+	sky_mat.energy_multiplier = 0.62 if night else 1.22
+	sky.sky_material = sky_mat
+	env.sky = sky
+
+
+func _cell_kind(tx: int, ty: int) -> String:
+	var track := sim.track
+	if ty < 0 or tx < 0 or ty >= track.rows.size() or tx >= track.width:
+		return "B"
+	var row := track.rows[ty]
+	if tx >= row.length():
+		return "G"
+	return row.substr(tx, 1)
+
+
+func _build_foliage(count: int) -> void:
+	if count <= 0:
+		return
+	var track := sim.track
+	var model := "treeLarge" if track.environment != "desert" else "treeSmall"
+	if CarFactory3D.prop_scene(model) == null:
+		model = "treeSmall"
+	if CarFactory3D.prop_scene(model) == null:
+		return
+	var spots: Array[Vector2i] = []
+	for ty in track.height:
+		for tx in track.width:
+			if _cell_kind(tx, ty) != "G":
+				continue
+			var beside := false
+			for dy in range(-2, 3):
+				for dx in range(-2, 3):
+					if TrackBuilder3D.is_road_cell(_cell_kind(tx + dx, ty + dy)):
+						beside = true
+						break
+				if beside:
+					break
+			if not beside:
+				spots.append(Vector2i(tx, ty))
+	if spots.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1202
+	var n := mini(count, spots.size())
+	var t := float(track.tile)
+	for i in n:
+		var pick := rng.randi_range(i, spots.size() - 1)
+		var swap: Vector2i = spots[i]
+		spots[i] = spots[pick]
+		spots[pick] = swap
+		var cell: Vector2i = spots[i]
+		var which := model if rng.randf() > 0.45 or track.environment == "desert" else "treeSmall"
+		if CarFactory3D.prop_scene(which) == null:
+			which = model
+		var height := rng.randf_range(78.0, 130.0)
+		if which == "treeSmall":
+			height = rng.randf_range(48.0, 82.0)
+		_place_tree(which, Vector3((float(cell.x) + 0.5) * t, 0.0, (float(cell.y) + 0.5) * t), rng.randf() * TAU, height, i)
+
+
+func _place_tree(model: String, pos: Vector3, yaw: float, target_height: float, index: int) -> void:
+	var scene := CarFactory3D.prop_scene(model)
+	if scene == null:
+		return
+	var root := Node3D.new()
+	root.name = "Foliage_%s_%d" % [model, index]
+	root.position = pos
+	root.rotation.y = yaw
+	var node := scene.instantiate() as Node3D
+	var box := CarFactory3D._model_aabb(node)
+	var s := target_height / maxf(box.size.y, 0.01)
+	node.scale = Vector3.ONE * s
+	root.add_child(node)
+	add_child(root)
+
+
+func _build_surface_marks(use_decals: bool) -> void:
+	var oil := load("res://assets/textures/decal_oil.png") if ResourceLoader.exists("res://assets/textures/decal_oil.png") else null
+	var chev := load("res://assets/textures/decal_chevron.png") if ResourceLoader.exists("res://assets/textures/decal_chevron.png") else null
+	if oil == null and chev == null:
+		return
+	var track := sim.track
+	var t := float(track.tile)
+	var placed := 0
+	for ty in track.height:
+		if placed >= 8:
+			break
+		for tx in track.width:
+			if _cell_kind(tx, ty) != "O":
+				continue
+			_add_mark(oil, Vector3((float(tx) + 0.5) * t, TrackBuilder3D.cell_height("O") + 0.35, (float(ty) + 0.5) * t), 36.0, use_decals, "oil%d" % placed)
+			placed += 1
+			if placed >= 8:
+				break
+	if sim.track.grid.is_empty() or chev == null:
+		return
+	var slot: Vector3 = sim.track.grid[0]
+	var heading := float(slot.z)
+	var face := Vector3(cos(heading), 0.0, sin(heading))
+	for i in 3:
+		var at := Vector3(slot.x, 0.4, slot.y) + face * (90.0 + float(i) * 70.0)
+		var node := _add_mark(chev, at, 28.0, use_decals, "chev%d" % i)
+		if node != null:
+			node.rotation.y = -heading
+
+
+func _add_mark(tex: Texture2D, pos: Vector3, width: float, use_decals: bool, tag: String) -> Node3D:
+	if tex == null:
+		return null
+	if use_decals:
+		var decal := Decal.new()
+		decal.name = "SurfaceMark_%s" % tag
+		decal.texture_albedo = tex
+		decal.size = Vector3(width, 12.0, width * 0.72)
+		decal.position = pos + Vector3(0, 6.0, 0)
+		decal.rotation.x = PI
+		decal.albedo_mix = 0.85
+		decal.modulate = Color(1, 1, 1, 0.85)
+		add_child(decal)
+		return decal
+	var mesh := QuadMesh.new()
+	mesh.size = Vector2(width, width * 0.72)
+	mesh.orientation = PlaneMesh.FACE_Y
+	var card := MeshInstance3D.new()
+	card.name = "SurfaceMark_%s" % tag
+	card.mesh = mesh
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = tex
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	card.material_override = mat
+	card.position = pos
+	card.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(card)
+	return card
 
 
 func _build_rain() -> void:
@@ -1188,7 +1329,7 @@ func _build_split() -> void:
 		container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var vp := SubViewport.new()
 		vp.handle_input_locally = false
-		vp.msaa_3d = Viewport.MSAA_2X
+		vp.msaa_3d = GraphicsQuality.profile()["msaa"] as Viewport.MSAA
 		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 		vp.size = Vector2i(maxi(int(rect.x / 2.0) - 4, 32), maxi(int(rect.y), 32))
 		container.add_child(vp)

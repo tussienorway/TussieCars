@@ -131,7 +131,7 @@ func _build_room() -> void:
 	e.sky = sky
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	e.ambient_light_energy = 0.7
-	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	e.tonemap_mode = Environment.TONE_MAPPER_AGX
 	e.glow_enabled = true
 	e.glow_intensity = 0.6
 	env.environment = e

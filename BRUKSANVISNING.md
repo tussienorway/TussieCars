@@ -145,6 +145,7 @@ Mobil, PC og Quest kan spille sammen på samme WiFi.
 - **Master, Music, Effects:** lydvolum.
 - **Fullscreen:** fullskjerm på PC.
 - **Screen shake:** kameraet rister når du blir truffet. Slå det av hvis du blir uvel.
+- **Graphics:** Auto, Low, Medium, High eller Ultra. Auto er Medium i nettleseren og High på Windows. Nettleseren hopper over effekter som Compatibility-renderereren ikke kan tegne.
 - **VR camera:** jaktkamera eller takkamera. Vises bare i VR.
 - **Touch controls:** auto, alltid på eller alltid av.
 - **Tastebindinger:** klikk på en handling og trykk den nye tasten.

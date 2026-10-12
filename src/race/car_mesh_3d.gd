@@ -104,11 +104,13 @@ static func _paint_mat(paint: String, dark: bool) -> StandardMaterial3D:
 		# Automotive clearcoat + a soft rim give the body panels a glossy,
 		# reflective "showroom" read. Both work on the Compatibility/WebGL2 renderer.
 		m.clearcoat_enabled = true
-		m.clearcoat = 0.85
-		m.clearcoat_roughness = 0.06
+		m.clearcoat = 0.92
+		m.clearcoat_roughness = 0.04
+		m.metallic = 0.42
+		m.roughness = 0.28
 		m.rim_enabled = true
-		m.rim = 0.22
-		m.rim_tint = 0.4
+		m.rim = 0.32
+		m.rim_tint = 0.55
 	return m
 
 
@@ -147,11 +149,13 @@ static func build_kenney(body: String, paint: String, scene: PackedScene) -> Dic
 				# Glossy clearcoat over every body panel, on all four cars, reads as
 				# modern car paint. Glass and tires are left matte.
 				dup.clearcoat_enabled = true
-				dup.clearcoat = 0.8
-				dup.clearcoat_roughness = 0.06
+				dup.clearcoat = 0.9
+				dup.clearcoat_roughness = 0.045
 				dup.rim_enabled = true
-				dup.rim = 0.2
-				dup.rim_tint = 0.4
+				dup.rim = 0.3
+				dup.rim_tint = 0.55
+				dup.metallic = maxf(dup.metallic, 0.28)
+				dup.roughness = minf(dup.roughness, 0.38)
 			if kenney_wants_tint(body) and not keep:
 				dup.albedo_color = paint_color
 				dup.metallic = 0.3
