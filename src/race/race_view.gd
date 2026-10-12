@@ -354,17 +354,25 @@ func _build_world() -> void:
 	env.fog_enabled = true
 	env.fog_light_color = cols["fog"]
 	env.fog_density = 0.0006 if rain else 0.00028
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	# AgX tonemapping (Godot 4.3+) reads more "modern filmic" than the old FILMIC
+	# curve and keeps hues under the bright arcade sun. A small exposure lift
+	# compensates for AgX being slightly darker than FILMIC.
+	env.tonemap_mode = Environment.TONE_MAPPER_AGX
+	env.tonemap_exposure = 1.0 if night else 1.1
 	env.glow_enabled = true
-	env.glow_intensity = 0.45
-	env.glow_strength = 1.1
-	env.glow_bloom = 0.12
-	# SSAO only exists on Forward+. The web build is Compatibility / WebGL.
+	env.glow_intensity = 0.55 if night else 0.45
+	env.glow_bloom = 0.15
+	env.glow_hdr_threshold = 0.9
+	# Glow has worked on the Compatibility (WebGL2) renderer since Godot 4.3 and a
+	# simplified SSAO since 4.6, so both run fine on the flat web/desktop build.
+	# Only VR (Quest) drops them: standalone frame time is tight and Compatibility
+	# SSAO has a known instability in headsets.
 	env.ssao_enabled = true
+	env.ssao_radius = 2.0
+	env.ssao_intensity = 2.0
 	env.ssao_light_affect = 0.5
-	if quest_lean() or OS.has_feature("web") or RenderingServer.get_current_rendering_method() == "gl_compatibility":
+	if quest_lean():
 		env.ssao_enabled = false
-	if quest_lean() or OS.has_feature("web"):
 		env.glow_enabled = false
 	world_env.environment = env
 	add_child(world_env)
@@ -373,8 +381,11 @@ func _build_world() -> void:
 	sun.light_energy = 0.4 if night else (0.7 if rain else 1.15)
 	sun.rotation = Vector3(-0.95, -0.55, 0)
 	sun.shadow_enabled = not quest_lean()
-	sun.directional_shadow_max_distance = 800.0
-	sun.shadow_blur = 1.5
+	# 800 was far too wide for the web tile-shadow renderer: it stretched shadow
+	# texels thin and soft. The chase camera only sees a few hundred units ahead,
+	# so a tighter range gives sharper, cheaper contact shadows under the cars.
+	sun.directional_shadow_max_distance = 220.0
+	sun.shadow_blur = 1.0
 	add_child(sun)
 	var ground := MeshInstance3D.new()
 	ground.mesh = TrackBuilder3D.build_ground(sim.track)
@@ -404,6 +415,17 @@ func _build_world() -> void:
 	skirt.material_override = skirt_mat
 	skirt.position = Vector3(size.x * 0.5, -9.0, size.y * 0.5)
 	add_child(skirt)
+	# One track-wide reflection probe (captured once) so the glossy clearcoat car
+	# paint reflects the sky, walls, and ground around it instead of a flat tint.
+	# ReflectionProbe renders on Compatibility/WebGL2; VR skips it for frame time.
+	if not quest_lean():
+		var probe := ReflectionProbe.new()
+		probe.size = Vector3(maxf(size.x, 400.0) + 200.0, 260.0, maxf(size.y, 400.0) + 200.0)
+		probe.position = Vector3(size.x * 0.5, 90.0, size.y * 0.5)
+		probe.update_mode = ReflectionProbe.UPDATE_ONCE
+		probe.ambient_mode = ReflectionProbe.AMBIENT_ENVIRONMENT
+		probe.max_distance = 2400.0
+		add_child(probe)
 	_build_start_line()
 	_build_start_complex()
 	_build_decor()
@@ -1134,6 +1156,7 @@ func _build_split() -> void:
 		container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var vp := SubViewport.new()
 		vp.handle_input_locally = false
+		vp.msaa_3d = Viewport.MSAA_2X
 		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 		vp.size = Vector2i(maxi(int(rect.x / 2.0) - 4, 32), maxi(int(rect.y), 32))
 		container.add_child(vp)

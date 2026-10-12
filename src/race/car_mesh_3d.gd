@@ -98,8 +98,17 @@ static func _paint_mat(paint: String, dark: bool) -> StandardMaterial3D:
 	var color := base.darkened(0.35) if dark else base
 	var m := StandardMaterial3D.new()
 	m.albedo_color = color
-	m.metallic = 0.35 if not dark else 0.2
-	m.roughness = 0.42 if not dark else 0.6
+	m.metallic = 0.3 if not dark else 0.2
+	m.roughness = 0.3 if not dark else 0.55
+	if not dark:
+		# Automotive clearcoat + a soft rim give the body panels a glossy,
+		# reflective "showroom" read. Both work on the Compatibility/WebGL2 renderer.
+		m.clearcoat_enabled = true
+		m.clearcoat = 0.85
+		m.clearcoat_roughness = 0.06
+		m.rim_enabled = true
+		m.rim = 0.22
+		m.rim_tint = 0.4
 	return m
 
 
@@ -133,10 +142,20 @@ static func build_kenney(body: String, paint: String, scene: PackedScene) -> Dic
 			var dup := (orig as StandardMaterial3D).duplicate() if orig is StandardMaterial3D else null
 			if dup == null:
 				continue
-			if kenney_wants_tint(body) and not _is_kenney_keep(str(orig.resource_name)):
+			var keep := _is_kenney_keep(str(orig.resource_name))
+			if not keep:
+				# Glossy clearcoat over every body panel, on all four cars, reads as
+				# modern car paint. Glass and tires are left matte.
+				dup.clearcoat_enabled = true
+				dup.clearcoat = 0.8
+				dup.clearcoat_roughness = 0.06
+				dup.rim_enabled = true
+				dup.rim = 0.2
+				dup.rim_tint = 0.4
+			if kenney_wants_tint(body) and not keep:
 				dup.albedo_color = paint_color
-				dup.metallic = 0.15
-				dup.roughness = 0.5
+				dup.metallic = 0.3
+				dup.roughness = 0.3
 				if body_mat == null:
 					body_mat = dup
 			mi.set_surface_override_material(si, dup)
