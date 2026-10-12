@@ -680,6 +680,23 @@ func show_settings() -> void:
 			Settings.save_settings()
 		)
 		col.add_child(shake)
+		var gfx := OptionButton.new()
+		gfx.name = "GraphicsQuality"
+		var gfx_values := ["auto", "low", "medium", "high", "ultra"]
+		gfx.add_item("Graphics: Auto")
+		gfx.add_item("Graphics: Low")
+		gfx.add_item("Graphics: Medium")
+		gfx.add_item("Graphics: High")
+		gfx.add_item("Graphics: Ultra")
+		var gfx_now := str(Settings.data.get("graphics", "auto"))
+		gfx.selected = maxi(0, gfx_values.find(gfx_now))
+		gfx.item_selected.connect(func(idx):
+			Settings.data["graphics"] = gfx_values[idx]
+			Settings.apply_graphics()
+			Settings.save_settings()
+		)
+		col.add_child(gfx)
+		col.add_child(_subtitle("Auto is Medium in the browser and High on Windows. Low drops shadows and bloom. Ultra adds fog, reflections, and sharper anti-aliasing where the renderer allows. The browser skips effects Compatibility cannot run."))
 		if VR.active():
 			var view := OptionButton.new()
 			view.name = "VrView"

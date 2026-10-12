@@ -255,6 +255,9 @@ static func ground_material(wet: bool = false) -> StandardMaterial3D:
 
 const ASPHALT_COLOR := "res://assets/textures/asphalt_color.jpg"
 const ASPHALT_ROUGH := "res://assets/textures/asphalt_roughness.jpg"
+const ASPHALT_NORMAL := "res://assets/textures/asphalt_normal.jpg"
+const GRASS_COLOR := "res://assets/textures/grass_color.jpg"
+const GRASS_NORMAL := "res://assets/textures/grass_normal.jpg"
 
 
 static func asphalt_material(wet: bool = false) -> StandardMaterial3D:
@@ -267,11 +270,70 @@ static func asphalt_material(wet: bool = false) -> StandardMaterial3D:
 	mat.roughness = 0.28 if wet else 0.9
 	mat.metallic = 0.18 if wet else 0.02
 	mat.metallic_specular = 0.7 if wet else 0.35
+	if ResourceLoader.exists(ASPHALT_NORMAL):
+		mat.normal_enabled = true
+		mat.normal_texture = load(ASPHALT_NORMAL)
+		mat.normal_scale = 0.35 if wet else 0.85
 	mat.uv1_triplanar = true
 	mat.uv1_world_triplanar = true
 	mat.uv1_scale = Vector3.ONE * 0.04
 	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	return mat
+
+
+static func grass_material(environment: String) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	if ResourceLoader.exists(GRASS_COLOR):
+		mat.albedo_texture = load(GRASS_COLOR)
+	match environment:
+		"desert":
+			mat.albedo_color = Color(0.86, 0.78, 0.48)
+		"industrial":
+			mat.albedo_color = Color(0.42, 0.48, 0.4)
+		_:
+			mat.albedo_color = Color(0.72, 0.92, 0.62)
+	if ResourceLoader.exists(GRASS_NORMAL):
+		mat.normal_enabled = true
+		mat.normal_texture = load(GRASS_NORMAL)
+		mat.normal_scale = 0.7
+	mat.roughness = 0.94
+	mat.uv1_triplanar = true
+	mat.uv1_world_triplanar = true
+	mat.uv1_scale = Vector3.ONE * 0.03
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return mat
+
+
+static func build_cover(track: TrackData, kind: String) -> ArrayMesh:
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var indices := PackedInt32Array()
+	var t := float(track.tile)
+	for ty in track.height:
+		var row := track.rows[ty] if ty < track.rows.size() else ""
+		for tx in track.width:
+			var cell := row.substr(tx, 1) if tx < row.length() else "G"
+			if cell != kind:
+				continue
+			var y := cell_height(cell) + 0.18
+			var base := verts.size()
+			verts.append(Vector3(tx * t, y, ty * t))
+			verts.append(Vector3(tx * t, y, (ty + 1) * t))
+			verts.append(Vector3((tx + 1) * t, y, (ty + 1) * t))
+			verts.append(Vector3((tx + 1) * t, y, ty * t))
+			for _i in 4:
+				normals.append(Vector3.UP)
+			indices.append_array([base, base + 2, base + 1, base, base + 3, base + 2])
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	if verts.is_empty():
+		return mesh
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 static func build_asphalt(track: TrackData) -> ArrayMesh:

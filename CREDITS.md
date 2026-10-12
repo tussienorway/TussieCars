@@ -22,8 +22,21 @@ The cars and trackside props in `assets/kenney/` come from the Car Kit and the R
 
 Author: ambientCG (Lennart Demes), https://ambientcg.com
 
-- Asphalt030, 1K JPG color and roughness, downloaded from https://ambientcg.com/view?id=Asphalt030
+- Asphalt030, 1K JPG color, roughness, and OpenGL normal, from https://ambientcg.com/view?id=Asphalt030
+- Grass004, 1K JPG color and OpenGL normal, from https://ambientcg.com/view?id=Grass004
 - Licence: [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
-- Local change: both maps were scaled to 512×512 JPEG so the web build stays small. Shipped as `assets/textures/asphalt_color.jpg` and `assets/textures/asphalt_roughness.jpg`.
+- Local change: the maps were scaled to 512×512 JPEG so the web build stays small. Shipped as `assets/textures/asphalt_color.jpg`, `asphalt_roughness.jpg`, `asphalt_normal.jpg`, `grass_color.jpg`, and `grass_normal.jpg`.
 
-Poly Haven CC0 HDRIs were considered for the sky. The tonemapped panoramas are tens of megabytes, which is a poor fit for the web build, so the sky stays a procedural Godot sky tuned per track environment.
+## Poly Haven
+
+Authors: Greg Zaal and the Poly Haven contributors, https://polyhaven.com
+
+- Kloppenheim 02 (Pure Sky), 1K HDR, https://polyhaven.com/a/kloppenheim_02_puresky — day sky, `assets/textures/sky_day.hdr`
+- Kloofendal 48d Partly Cloudy (Pure Sky), 1K HDR, https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky — rain sky, `assets/textures/sky_overcast.hdr`
+- Licence: [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+
+The 1K plates are about 1.4 MB each. Night circuits keep a procedural sky so a daylight plate is not pasted onto a night race.
+
+## Original grading and decals
+
+`assets/textures/grade_lut.png` (a 16³ color LUT), `decal_oil.png`, and `decal_chevron.png` were generated for this project. They are not third-party art.

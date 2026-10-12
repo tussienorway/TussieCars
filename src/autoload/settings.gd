@@ -14,6 +14,7 @@ var data := {
 	"net_port": 7777,
 	"net_track": "harbor_loop",
 	"vr_view": "chase",
+	"graphics": "auto",
 }
 var listening := ""
 var _joy_ready := false
@@ -47,6 +48,7 @@ func _ready() -> void:
 	apply_inputs()
 	apply_audio()
 	apply_window()
+	apply_graphics()
 
 
 func load_settings() -> void:
@@ -68,6 +70,13 @@ func save_settings() -> void:
 	if file == null:
 		return
 	file.store_string(JSON.stringify(data, "\t"))
+
+
+func apply_graphics() -> void:
+	var vp := get_viewport()
+	if vp == null or DisplayServer.get_name() == "headless":
+		return
+	GraphicsQuality.apply_viewport(vp, str(data.get("graphics", "auto")))
 
 
 func apply_window() -> void:
