@@ -14,7 +14,7 @@ The site files are on the `gh-pages` branch. If the address 404s, enable Pages u
 
 Ready-made builds are on the [Releases page](https://github.com/tussienorway/TussieCars/releases/latest):
 
-- `TussieCars-Windows-Setup.exe`: Windows 64-bit installer (v1.0.0). It installs for the current user and adds a Start-menu shortcut. Windows SmartScreen warns because the file is unsigned: choose **More info**, then **Run anyway**. PC VR is `TussieCars VR` in the Start menu, or `TussieCars-VR.bat` in the install folder.
+- `TussieCars-Windows-Setup.exe`: Windows 64-bit installer (v1.1.0). It installs for the current user and adds a Start-menu shortcut. Windows SmartScreen warns because the file is unsigned: choose **More info**, then **Run anyway**. PC VR is `TussieCars VR` in the Start menu, or `TussieCars-VR.bat` in the install folder.
 - `TussieCars-windows.zip`: older Windows 64-bit zip. Unzip and run `TussieCars.exe`, or `TussieCars-VR.bat` for PC VR.
 - `TussieCars.apk`: Android phones (ARM64).
 - `TussieCars-Quest.apk`: Meta Quest 2/3/3S/Pro. Sideload it as described under VR below.

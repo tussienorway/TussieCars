@@ -18,10 +18,14 @@
   "max_speed": 470,
   "reverse_max": 160,
   "turn_rate": 3.05,
-  "high_speed_turn": 0.4,
+  "high_speed_turn": 0.32,
   "grip": 8.2,
   "drag": 0.18,
-  "rolling": 18
+  "rolling": 18,
+  "lat_accel": 640,
+  "speed_grip": 0.34,
+  "slip_push": 0.9,
+  "load_transfer": 0.55
  },
  "boost": {
   "extra_accel": 360,

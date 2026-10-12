@@ -238,12 +238,12 @@ func _ai(car: CarState, _delta: float) -> Dictionary:
 	var n := track.waypoints.size()
 	if n == 0:
 		return {"throttle": 1.0, "brake": 0.0, "steer": 0.0}
-	var look := 4 + int(clampf(car.vel.length() / 180.0, 0.0, 3.0))
+	var look := 5 + int(clampf(car.vel.length() / 100.0, 0.0, 7.0))
 	if car.personality == "cautious":
 		look += 2
 	elif car.personality == "aggressive":
 		look -= 1
-	look = maxi(look, 2)
+	look = maxi(look, 3)
 	var target: Vector2 = track.waypoints[(car.wp_index + look) % n]
 	var forward := Vector2.from_angle(car.heading)
 	var right := Vector2(-forward.y, forward.x)
@@ -255,23 +255,25 @@ func _ai(car: CarState, _delta: float) -> Dictionary:
 		target += right * 36.0 * side
 	var desired := target - car.pos
 	var steer := clampf(Geom.ang_diff(desired.angle(), car.heading) * 2.5, -1.0, 1.0)
-	if _blocked(car.pos, forward + right * 0.55, 52.0) and not _blocked(car.pos, forward - right * 0.55, 52.0):
+	var look_dist := 48.0 + clampf(car.vel.length() * 0.12, 0.0, 70.0)
+	var wall_ahead := _blocked(car.pos, forward, look_dist)
+	if _blocked(car.pos, forward + right * 0.55, look_dist) and not _blocked(car.pos, forward - right * 0.55, look_dist):
 		steer = -1.0
-	elif _blocked(car.pos, forward - right * 0.55, 52.0) and not _blocked(car.pos, forward + right * 0.55, 52.0):
+	elif _blocked(car.pos, forward - right * 0.55, look_dist) and not _blocked(car.pos, forward + right * 0.55, look_dist):
 		steer = 1.0
-	elif _blocked(car.pos, forward, 40.0):
+	elif wall_ahead:
 		steer = -1.0 if _blocked(car.pos, right, 28.0) else 1.0
-	var a: Vector2 = track.waypoints[(car.wp_index + 3) % n] - track.waypoints[car.wp_index]
-	var b: Vector2 = track.waypoints[(car.wp_index + 9) % n] - track.waypoints[(car.wp_index + 3) % n]
-	var turn := 0.0
-	if a.length() > 2.0 and b.length() > 2.0:
-		turn = absf(Geom.ang_diff(b.angle(), a.angle()))
-	var corner := 0.48
+	var turn_near := _wp_turn(car, 1, 4)
+	var turn_far := _wp_turn(car, 4, 11)
+	var turn := maxf(turn_near, turn_far * 0.9)
+	var corner := 0.34
 	if car.personality == "aggressive":
-		corner = 0.66
+		corner = 0.46
 	elif car.personality == "cautious":
-		corner = 0.36
-	var speed_mul := lerpf(1.0, corner, clampf(turn / 1.2, 0.0, 1.0))
+		corner = 0.26
+	var speed_mul := lerpf(1.0, corner, clampf(turn / 0.85, 0.0, 1.0))
+	if turn_far > 0.32:
+		speed_mul = minf(speed_mul, lerpf(0.82, corner, clampf(turn_far / 0.85, 0.0, 1.0)))
 	var surf := track.surface_at(car.pos)
 	if float(surf["grip"]) < 0.75:
 		speed_mul *= 0.82
@@ -286,9 +288,19 @@ func _ai(car: CarState, _delta: float) -> Dictionary:
 	var speed := car.vel.dot(forward)
 	var throttle := 1.0
 	var brake := 0.0
-	if speed > target_speed:
-		throttle = 0.1
-		brake = clampf((speed - target_speed) / 160.0, 0.0, 1.0)
+	if speed > target_speed * 0.96:
+		throttle = 0.0
+		brake = clampf((speed - target_speed) / 72.0, 0.2, 1.0)
+	elif speed > target_speed * 0.86:
+		throttle = 0.2
+	if absf(steer) > 0.28 and speed > 160.0:
+		var panic := clampf((speed - 120.0) / 180.0, 0.0, 1.0) * clampf(absf(steer) * 1.2, 0.0, 1.0)
+		if panic > 0.15:
+			throttle = 0.0
+			brake = maxf(brake, panic)
+	if wall_ahead and speed > 120.0:
+		throttle = 0.0
+		brake = maxf(brake, clampf(speed / 280.0, 0.35, 1.0))
 	if surf["id"] == "G" or surf["id"] == "W":
 		var home: Vector2 = track.waypoints[car.wp_index] - car.pos
 		steer = clampf(Geom.ang_diff(home.angle(), car.heading) * 3.0, -1.0, 1.0)
@@ -329,6 +341,18 @@ func _ai(car: CarState, _delta: float) -> Dictionary:
 		"drop_mine": drop_mine,
 		"boost": boost,
 	}
+
+
+func _wp_turn(car: CarState, a_off: int, b_off: int) -> float:
+	var n := track.waypoints.size()
+	if n < 3:
+		return 0.0
+	var origin: Vector2 = track.waypoints[car.wp_index % n]
+	var a: Vector2 = track.waypoints[(car.wp_index + a_off) % n] - origin
+	var b: Vector2 = track.waypoints[(car.wp_index + b_off) % n] - track.waypoints[(car.wp_index + a_off) % n]
+	if a.length() < 2.0 or b.length() < 2.0:
+		return 0.0
+	return absf(Geom.ang_diff(b.angle(), a.angle()))
 
 
 func _in_slipstream(car: CarState) -> bool:
