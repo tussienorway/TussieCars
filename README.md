@@ -8,6 +8,8 @@ A career runs through four championships, sixteen circuits, and a garage. You ea
 
 **Play in the browser:** [https://tussienorway.github.io/TussieCars/](https://tussienorway.github.io/TussieCars/)
 
+The site files are on the `gh-pages` branch. If the address 404s, enable Pages under the repo settings: Deploy from a branch, `gh-pages`, folder `/ (root)`. Merging to `main` also runs `.github/workflows/pages.yml`, which publishes with GitHub Actions once Pages is set to that source.
+
 **Bruksanvisning (Norwegian user manual): [BRUKSANVISNING.md](BRUKSANVISNING.md).** The game also has a How to Play page in the main menu.
 
 Ready-made builds are on the [Releases page](https://github.com/tussienorway/TussieCars/releases/latest):

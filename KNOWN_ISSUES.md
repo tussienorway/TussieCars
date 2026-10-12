@@ -2,6 +2,8 @@
 
 ## Browser build
 
+The published files are on the `gh-pages` branch. Turning GitHub Pages on is a repository setting this environment cannot change. Until that is set to branch `gh-pages` and folder `/ (root)`, https://tussienorway.github.io/TussieCars/ returns 404. `.github/workflows/pages.yml` rebuilds the same site from `main` when Pages is set to GitHub Actions.
+
 The web export is single-player. Browsers cannot open the UDP ports the lobby uses, so Multiplayer explains that and returns you to the menu. The page is published without cross-origin isolation headers, so the export has thread support off (GitHub Pages cannot send the headers a threaded build needs).
 
 Play in VR on the web is a button on the main menu. It asks the browser for a WebXR session and leaves the flat game running if there is no headset or the browser refuses. OpenXR (Quest standalone and PC VR) is unchanged. WebXR was not run on a real headset here.
